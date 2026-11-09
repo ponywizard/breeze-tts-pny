@@ -13,6 +13,7 @@ import time
 import urllib.error
 
 ROOT = Path(__file__).resolve().parents[1]
+MOD_VERSION = json.loads((ROOT/'mods/breeze_tts_pny/mod.json').read_text())['version']
 sys.path.insert(0, str(ROOT / 'server'))
 from breeze_pny.service import get
 from breeze_pny.__main__ import smoke
@@ -25,7 +26,7 @@ def main():
     parser.add_argument('--port', type=int, default=18882)
     parser.add_argument('--native-port', type=int, default=18887)
     parser.add_argument('--game', type=Path, help='Optional isolated exported game directory, prepared by verify.py')
-    parser.add_argument('--mod-pack', type=Path, default=ROOT / 'dist/breeze_tts_pny-0.1.0-linux-x86_64.pck')
+    parser.add_argument('--mod-pack', type=Path, default=ROOT / f'dist/breeze_tts_pny-{MOD_VERSION}-linux-x86_64.pck')
     parser.add_argument('--save-audio', action='store_true')
     args = parser.parse_args()
     run = args.output.resolve(); run.mkdir(parents=True, exist_ok=False)

@@ -10,6 +10,22 @@ import shutil
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
+MOD_VERSION = json.loads((ROOT/'mods/breeze_tts_pny/mod.json').read_text())['version']
+
+
+DECLARATION = re.compile(r'''(?m)^(?:@[A-Za-z_]\w*(?:\((?:[^()"'\n]|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')*\))?\s*)*(?:static\s+)?(?:func|var|const|signal|enum|class)\s+([A-Za-z_]\w*)''')
+
+
+def declared_chain(source, path):
+    """Names declared by a game script and the game scripts it extends, and those scripts."""
+    names, chain = set(), []
+    while path and path not in chain:
+        chain.append(path)
+        text = (source/path.removeprefix('res://')).read_text()
+        names |= set(DECLARATION.findall(text))
+        parent = re.search(r'(?m)^extends "(res://[^"\n]+)"', text)
+        path = parent[1] if parent else None
+    return names, chain
 
 
 def sha(path):
@@ -28,7 +44,7 @@ def main():
     version = re.search(r'config/version="([^"]+)"', (source/'project.godot').read_text())[1]
     if version != '0.3.0-maredev':
         raise RuntimeError('This preview targets 0.3.0-maredev; validate a new version before building')
-    output = ROOT/f'dist/breeze_tts_pny-0.1.0-{args.platform}.pck'
+    output = ROOT/f'dist/breeze_tts_pny-{MOD_VERSION}-{args.platform}.pck'
     output.parent.mkdir(exist_ok=True)
     work = ROOT/'build/pack'/args.platform
     work.mkdir(parents=True, exist_ok=True)
@@ -64,6 +80,16 @@ def main():
     info = mod/'mod.json'; config = json.loads(info.read_text())
     config['description'] = config['description'].replace('Linux x86_64', ('Windows' if windows else 'Linux')+' x86_64')
     info.write_text(json.dumps(config, indent=2)+'\n')
+    # Members each extension adds to its game script, from the matching source.
+    # Another mod's full replacement of that script may be the extension's parent
+    # only if it declares none of them (install_extensions.gd).
+    added = {}
+    for extension in json.loads((mod/'mod.json').read_text())['script_extensions']:
+        text = (mod/extension.removeprefix('res://mods/breeze_tts_pny/')).read_text()
+        target = re.search(r'(?m)^extends "(res://[^"\n]+)"', text)[1]
+        names, chain = declared_chain(source, target)
+        added[target] = {'added': sorted(set(DECLARATION.findall(text)) - names), 'chain': chain}
+    (mod/'added_members.json').write_text(json.dumps(added, indent=2, sort_keys=True)+'\n')
     # Ship the current complete notices instead of a stale development copy.
     shutil.copy2(ROOT/'THIRD_PARTY_NOTICES.md', mod/'licenses/THIRD_PARTY_NOTICES.md')
     command = [str(engine), '--headless', '--xr-mode', 'off', '--path', str(project),
@@ -74,7 +100,7 @@ def main():
     (work/'build.log').write_text(log)
     if result.returncode or 'MOD_BUILT ' not in log or 'SCRIPT ERROR' in log:
         raise RuntimeError(log)
-    receipt = {'version': '0.1.0', 'game_version': version, 'godot': '4.5', 'platform': args.platform,
+    receipt = {'version': MOD_VERSION, 'game_version': version, 'godot': '4.5', 'platform': args.platform,
                'pack_sha256': sha(output), 'bytes': output.stat().st_size,
                'files': {'mods/breeze_tts_pny/'+p.relative_to(mod).as_posix(): sha(p) for p in sorted(mod.rglob('*')) if p.is_file() and not p.name.endswith('.uid')},
                'official_builder_sha256': sha(source/'tools/modding/build_mod.gd')}

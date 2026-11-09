@@ -29,6 +29,8 @@ The MOSS label is the game's existing HTTP provider setting; the companion gener
 
 Detailed instructions, offline installation, updates and troubleshooting: [Windows](docs/WINDOWS.md) · [Linux](docs/SERVER.md). To run the companion on a different computer, see [network setup](docs/SERVER.md#another-machine).
 
+No suitable GPU? The experimental [Colab notebook](docs/COLAB.md) runs the same speech service on a free Colab GPU and gives an `https://` link (game mod 0.1.1 or later, currently built from source). A complete Colab session still needs validation.
+
 A fresh game folder uses the game's usual saves. The optional Windows `prepare-playtest.cmd` helper creates a **separate disposable playtest profile**; it is not required for normal installation. See [isolated testing](docs/WINDOWS.md#optional-isolated-playtest).
 
 ## Compatibility and support

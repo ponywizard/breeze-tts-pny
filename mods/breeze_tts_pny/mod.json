@@ -1,7 +1,7 @@
 {
   "id": "breeze_tts_pny",
   "name": "Breeze TTS PNY",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "nak",
   "description": "Incremental Breeze speech and Talking Avatar lip-sync. Linux x86_64 preview for Home Equestria 0.3.0. Requires a compatible Breeze character router. Talking Avatar by InterviewFlowAI (MIT).",
   "game_version": "0.3.0-maredev",

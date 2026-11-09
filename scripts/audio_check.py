@@ -10,6 +10,7 @@ import time
 import wave
 
 ROOT = Path(__file__).resolve().parents[1]
+MOD_VERSION = json.loads((ROOT/'mods/breeze_tts_pny/mod.json').read_text())['version']
 
 
 def main():
@@ -29,7 +30,7 @@ def main():
             wav.writeframes(pcm if rate == 24000 else b''.join(pcm[i:i+2]*2 for i in range(0,len(pcm),2)))
     mods = work/'user/home-equestria-public/mods'
     mods.mkdir(parents=True)
-    pack = ROOT/'dist/breeze_tts_pny-0.1.0-linux-x86_64.pck'
+    pack = ROOT/f'dist/breeze_tts_pny-{MOD_VERSION}-linux-x86_64.pck'
     shutil.copy2(pack, mods/pack.name)
     release = ROOT/'build/verify/game'
     if not release.exists(): raise RuntimeError('Run verify.py first to prepare the isolated game')

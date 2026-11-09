@@ -10,4 +10,6 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	var ready := TRACK.prepare() if TRACK.enabled() else false
-	print("[breeze-tts-pny] 0.1.0 ", OS.get_name(), " preview; native lip-sync=", ready)
+	var manifest: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://mods/breeze_tts_pny/mod.json"))
+	var version: String = manifest.get("version", "?") if manifest is Dictionary else "?"
+	print("[breeze-tts-pny] ", version, " ", OS.get_name(), " preview; native lip-sync=", ready)

@@ -2,17 +2,19 @@
 
 This describes the interface used by the companion and development Breeze routers. See [SERVER.md](SERVER.md) for installation and operation. The mod never launches a service or downloads TTS weights.
 
-The configured TTS provider is the game's MOSS-compatible provider, with a plain HTTP URL ending in `/tts`. This preview's stream client does not implement HTTPS, IPv6 literals or an authorization header. Use a local endpoint, a trusted LAN, or a local tunnel endpoint as appropriate to the deployment. Speech text and character identity are sent to the configured router; the mod adds no telemetry endpoint.
+The configured TTS provider is the game's MOSS-compatible provider, with an HTTP or HTTPS URL ending in `/tts`. HTTPS verifies the server certificate against the system's trusted roots; it is meant for a remote router such as the Colab notebook's `trycloudflare.com` link (see [COLAB.md](COLAB.md)). The stream client does not implement IPv6 literals or an authorization header. Use a local endpoint, a trusted LAN, or a tunnel as appropriate to the deployment. Speech text and character identity are sent to the configured router; the mod adds no telemetry endpoint.
 
 ## Capability probe
 
-For a configured URL `http://host:port/tts`, the client requests `GET /health` with a five-second timeout and 64 KiB response limit. Enablement requires HTTP 200 and:
+For a configured URL `http://host:port/tts` (or `https://…/tts`), the client requests `GET /health` with a five-second timeout and 64 KiB response limit. Enablement requires HTTP 200 and:
 
 ```json
 {"ready": true, "native_backend": "breeze", "pcm_stream": "framed-v1"}
 ```
 
-The probe runs when the client starts or its configuration changes. Connection failures, timeouts, transient HTTP failures and a compatible router still loading are retried up to six times, with 1/2/4/8/10-second delays. Changing configuration or closing the client invalidates pending retries. Missing or incompatible capabilities leave the existing WAV transport selected. Start the router before loading a world, or reload the world if it became available only after all attempts. Probe failures log their attempt, request result and HTTP status.
+An optional `"prebuffer_ms"` number asks the client to buffer that much audio before playback starts or resumes after an underrun (default and minimum 200, at most 4000). A router that generates slower than real time, or sits behind a tunnel, uses it to avoid stuttering.
+
+The probe runs when the client starts or its configuration changes. Connection failures, timeouts, transient HTTP failures and a compatible router still loading are retried up to six times, with 1/2/4/8/10-second delays. Changing configuration or closing the client invalidates pending retries. Missing or incompatible capabilities leave the existing WAV transport selected. Once every attempt has failed, the next speech request probes again, at most every 30 seconds; that line still uses the WAV transport. Probe failures log their attempt, request result and HTTP status.
 
 ## Speech request
 

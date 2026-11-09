@@ -8,13 +8,14 @@ import subprocess
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+MOD_VERSION = json.loads((ROOT/'mods/breeze_tts_pny/mod.json').read_text())['version']
 
 
 def main():
     work = ROOT/'build'/('world-'+str(time.time_ns()))
     user = work/'user/home-equestria-public'
     (user/'mods').mkdir(parents=True)
-    shutil.copy2(ROOT/'dist/breeze_tts_pny-0.1.0-linux-x86_64.pck', user/'mods')
+    shutil.copy2(ROOT/f'dist/breeze_tts_pny-{MOD_VERSION}-linux-x86_64.pck', user/'mods')
     (user/'ai_config.json').write_text(json.dumps({'ai_usage':'talk',
         'llm':{'provider':'openai','base_url':'','model':''},
         'tts':{'provider':'none'},'stt':{'provider':'off'}}))

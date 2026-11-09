@@ -27,7 +27,7 @@ python3 scripts/build.py \
 
 The script checks game/engine versions, stages a minimal project under `build/pack/`, and calls the unmodified official mod builder. It copies the engine into an isolated directory so adjacent game or development packs cannot change the build. The selected native library is embedded as raw bytes; the runtime extracts and loads it on first use. None of these steps changes the supplied game/source tree or the player's mods folder.
 
-Share `dist/breeze_tts_pny-0.1.0-linux-x86_64.pck`. Keep `dist/SHA256SUMS` and the `.build.json` receipt with release artifacts. The receipt records packed source hashes, binary hash, model hash and official builder hash; it does not include private configuration or absolute build paths. Builds are not claimed to be byte-for-byte reproducible across compilers or engine versions.
+The output filename follows the version in `mods/breeze_tts_pny/mod.json`, currently `dist/breeze_tts_pny-0.1.1-linux-x86_64.pck`. Keep `dist/SHA256SUMS` and the `.build.json` receipt with release artifacts. The receipt records packed source hashes, binary hash, model hash and official builder hash; it does not include private configuration or absolute build paths. Builds are not claimed to be byte-for-byte reproducible across compilers or engine versions.
 
 ## Checks
 

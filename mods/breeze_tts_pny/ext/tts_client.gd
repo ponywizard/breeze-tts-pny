@@ -8,7 +8,14 @@ var _health: HTTPRequest
 var _probe_serial := 0
 var _probe_attempts := 0
 const PROBE_ATTEMPTS := 6
+const REPROBE_MS := 30000
+var _probe_ms := -REPROBE_MS
 var _breeze_url := ""
+## Audio frames buffered before playback starts. A router may ask for more than
+## 200 ms in /health ("prebuffer_ms"): one slower than real time, or far away.
+const START_FRAMES := 4800
+const MAX_START_FRAMES := 24000 * 4
+var _start_frames := START_FRAMES
 var _want_live := false
 var _live: RefCounted
 var _live_announced := false
@@ -26,6 +33,7 @@ func _ready() -> void:
 func configure(section: Dictionary) -> void:
 	super.configure(section)
 	_breeze_url = ""
+	_start_frames = START_FRAMES
 	_probe_attempts = 0
 	_probe.call_deferred()
 
@@ -33,8 +41,9 @@ func _probe() -> void:
 	_probe_serial += 1
 	if is_instance_valid(_health):
 		_health.cancel_request(); _health.queue_free(); _health = null
-	if not is_inside_tree() or not NATIVE.supported() or provider != "moss" or not url.begins_with("http://") or not url.rstrip("/").ends_with("/tts"): return
+	if not is_inside_tree() or not NATIVE.supported() or provider != "moss" or not (url.begins_with("http://") or url.begins_with("https://")) or not url.rstrip("/").ends_with("/tts"): return
 	_probe_attempts += 1
+	_probe_ms = Time.get_ticks_msec()
 	_health = HTTPRequest.new(); _health.timeout = 5.0; _health.body_size_limit = 65536
 	add_child(_health)
 	_health.request_completed.connect(_on_health.bind(url, _probe_serial))
@@ -53,7 +62,9 @@ func _on_health(result: int, code: int, _headers: PackedStringArray, body: Packe
 		_retry_probe(serial, result, code)
 		return
 	_breeze_url = url
-	print("[breeze-tts-pny] Compatible character router detected; incremental speech enabled.")
+	var hint: Variant = data.get("prebuffer_ms", 0)
+	_start_frames = clampi(int(hint) * 24, START_FRAMES, MAX_START_FRAMES) if hint is float or hint is int else START_FRAMES
+	print("[breeze-tts-pny] Compatible character router detected; incremental speech enabled (prebuffer ", _start_frames / 24, " ms).")
 
 func _retry_probe(serial: int, result: int, code: int) -> void:
 	print("[breeze-tts-pny] capability probe attempt=", _probe_attempts, " result=", result, " HTTP=", code)
@@ -71,7 +82,15 @@ func build_body(text: String, speaker_id: int, emotion: String) -> Dictionary:
 	if can_stream() and not _breeze_character.is_empty(): body["character_id"] = _breeze_character
 	return body
 
+## A router that came up after every probe attempt (a Colab link pasted while
+## the notebook was still loading) is found again on a later line.
+func _reprobe_if_given_up() -> void:
+	if _breeze_url.is_empty() and _probe_attempts >= PROBE_ATTEMPTS and Time.get_ticks_msec() - _probe_ms >= REPROBE_MS:
+		_probe_attempts = 0
+		_probe()
+
 func synthesize_profile(text: String, profile: Dictionary, emotion: String, on_done: Callable) -> bool:
+	_reprobe_if_given_up()
 	var settings := get_tree().root.get_node_or_null("Settings") if is_inside_tree() else null
 	if not can_stream() or CHATTER.is_ponese_mode(voice_mode) or (settings != null and settings.has_method("tts_enabled") and not settings.tts_enabled()):
 		return super.synthesize_profile(text, profile, emotion, on_done)
@@ -98,6 +117,7 @@ func _dispatch_request(next_url: String, headers := PackedStringArray(), method 
 		_capture("request", {"method": method, "body": body})
 		if _want_live:
 			_live = UTTERANCE.new(); _live.cancel_transport = cancel; _live_announced = false
+			_live.start_frames = _start_frames
 		return _pcm_stream.start(url.rstrip("/") + "/stream", body, timeout)
 	return super._dispatch_request(next_url, headers, method, body)
 
@@ -111,7 +131,9 @@ func synthesize_profile_live(text: String, profile: Dictionary, emotion: String,
 func _on_pcm_chunk(data: PackedByteArray) -> void:
 	if _live == null or not busy: return
 	_live.pcm.append_array(data)
-	if _live.pcm.size() >= 9600: _announce_live()
+	# Hand the line over once its prebuffer is here: the director gives playback
+	# 12 seconds to start after the handoff, but stays in rendering for 90.
+	if _live.pcm.size() >= maxi(9600, _live.start_frames * 2): _announce_live()
 
 func _announce_live() -> void:
 	if _live == null or _live_announced or not _on_done.is_valid(): return

@@ -91,6 +91,14 @@ func run() -> void:
 	check(client.synthesize_profile_live("How lovely.", lily, "neutral", received), "background voice request accepted in auto mode")
 	await settle()
 	check(callbacks == 1 and early and source != null and source.done and source.error.is_empty(), "Lily uses identity-routed PCM despite missing numbered speaker")
+	reset()
+	client.configure({"provider":"moss", "url":endpoint + "/prebuffer/tts", "voice_mode":"tts", "chatter_fallback":false})
+	deadline = Time.get_ticks_msec() + 5000
+	while not client.can_stream() and Time.get_ticks_msec() < deadline: await process_frame
+	check(client.can_stream() and client._start_frames == 24000, "router's prebuffer_ms hint is read (1000 ms)")
+	check(client.synthesize_profile_live("Far away.", {"id":"stream_fixture", "voice_mode":"tts"}, "neutral", received), "request accepted with a prebuffer hint")
+	await settle()
+	check(callbacks == 1 and source != null and source.start_frames == 24000 and source.done and source.error.is_empty(), "live utterance carries the prebuffer")
 	client.queue_free(); await process_frame
 	printerr("BREEZE_TRANSPORT_DONE failures=", failures)
 	quit(0 if failures == 0 else 1)

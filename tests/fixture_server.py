@@ -34,6 +34,8 @@ class Handler(BaseHTTPRequestHandler):
                 return
         elif self.path == '/health':
             data.update(pcm_stream='framed-v1', native_backend='breeze')
+        elif self.path == '/prebuffer/health':
+            data.update(pcm_stream='framed-v1', native_backend='breeze', prebuffer_ms=1000)
         raw = json.dumps(data).encode()
         self.send_response(200)
         self.send_header('Content-Length', str(len(raw)))
@@ -52,7 +54,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.end_headers()
                 self.wfile.write(WAV)
                 return
-            if self.path not in {'/tts/stream', '/warming/tts/stream'} or identity not in {'stream_fixture', 'corrupt_fixture', 'cancel_fixture', 'spike', 'lily_valley'}:
+            if self.path not in {'/tts/stream', '/warming/tts/stream', '/prebuffer/tts/stream'} or identity not in {'stream_fixture', 'corrupt_fixture', 'cancel_fixture', 'spike', 'lily_valley'}:
                 self.send_error(400)
                 return
             frames = [struct.pack('<I', len(PCM[i:i+3840])) + PCM[i:i+3840] for i in range(0, len(PCM), 3840)]

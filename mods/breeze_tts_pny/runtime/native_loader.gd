@@ -9,9 +9,13 @@ static func platform_key() -> String:
 	if not OS.has_feature("x86_64"): return ""
 	return {"Linux":"linux.x86_64", "Windows":"windows.x86_64"}.get(OS.get_name(), "")
 
+static var _supported := -1 # unknown; the packed defaults can't change while the game runs
+
 static func supported() -> bool:
-	var defaults: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://mods/breeze_tts_pny/defaults.json"))
-	return defaults is Dictionary and defaults.get("lip_sync", false) and not platform_key().is_empty() and ProjectSettings.get_setting("application/config/version", "") == "0.3.0-maredev"
+	if _supported < 0:
+		var defaults: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://mods/breeze_tts_pny/defaults.json"))
+		_supported = int(defaults is Dictionary and defaults.get("lip_sync", false) and not platform_key().is_empty() and ProjectSettings.get_setting("application/config/version", "") == "0.3.0-maredev")
+	return _supported == 1
 
 static func prepare() -> bool:
 	if attempted: return loaded

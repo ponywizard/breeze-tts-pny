@@ -18,6 +18,7 @@ Windows PCVR issues will be investigated case by case. Another Windows VR playte
 The checks cover:
 
 - Actual exported game mod loading with the mod enabled and disabled; later preloads retain the extended speech classes.
+- Source replacement compatibility: enum comments, semicolon-separated declarations, annotations, quoted delimiters, multiline strings and inherited collisions; a conflict refuses the entire installation before any extension is installed.
 - Sentence grouping in captured solo/group helpers; short reactions, long sentences, punctuation, speaker boundaries, action/impression placement, facial expressions and unchanged display paging. Disabling the mod restores stock splitting.
 - All 55 inspected OpenPony eye mesh/shader fields match the unmodified game.
 - Native lip-sync library extraction, model loading, worker inference and cancellation.

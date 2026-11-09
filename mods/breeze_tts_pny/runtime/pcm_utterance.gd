@@ -8,6 +8,7 @@ var error := ""
 var cancelled := false
 var claimed := false
 var request_ms := Time.get_ticks_msec()
+var start_frames := 4800 # buffered before playback starts or resumes
 var uri := ""
 var cancel_transport := Callable()
 

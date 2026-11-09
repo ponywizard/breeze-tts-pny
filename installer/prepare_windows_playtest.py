@@ -47,7 +47,10 @@ def prepare(game):
         if user != expected:
             raise ValueError('Game did not select the isolated playtest profile; setup stopped')
         mods = user / 'mods'; mods.mkdir(parents=True, exist_ok=True)
-        pack = ROOT / 'game-mod/breeze_tts_pny-0.1.0-windows-x86_64.pck'
+        packs = sorted((ROOT / 'game-mod').glob('breeze_tts_pny-*-windows-x86_64.pck'))
+        if len(packs) != 1:
+            raise ValueError('Expected exactly one Breeze TTS PNY Windows pack in game-mod; setup stopped')
+        pack = packs[0]
         shutil.copy2(pack, mods / pack.name)
         config = user / 'ai_config.json'
         current = json.loads(config.read_text(encoding='utf-8')) if config.exists() else {}

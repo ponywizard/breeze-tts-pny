@@ -5,6 +5,7 @@ signal finished
 signal failed(message: String)
 const RATE := 24000
 const START_FRAMES := 4800 # 200 ms of audio; not 200 ms of wall-clock waiting.
+var _start_frames := START_FRAMES # the utterance may ask for more
 var source: RefCounted
 var voice: AudioStreamPlayer3D
 var playback: AudioStreamGeneratorPlayback
@@ -25,6 +26,7 @@ func _init() -> void: set_process(false)
 
 func begin(utterance: RefCounted, player: AudioStreamPlayer3D) -> void:
 	source = utterance; voice = player; active = true
+	_start_frames = maxi(START_FRAMES, int(utterance.get("start_frames")) if utterance.get("start_frames") != null else START_FRAMES)
 	_last_data_ms = Time.get_ticks_msec()
 	set_process(true)
 
@@ -46,7 +48,7 @@ func _process(_delta: float) -> void:
 	if not source.done and Time.get_ticks_msec() - _last_data_ms > 10000:
 		_fail("PCM stream stalled"); return
 	if not began:
-		if frames < START_FRAMES and not source.done: return
+		if frames < _start_frames and not source.done: return
 		if frames == 0: _fail("Empty PCM speech"); return
 		var generator := AudioStreamGenerator.new()
 		generator.mix_rate = RATE; generator.buffer_length = 0.5
@@ -70,7 +72,7 @@ func _process(_delta: float) -> void:
 		_log("underrun", {"skips":skips-_last_skips})
 	_last_skips = skips
 	if _rebuffering:
-		if frames - _sent < START_FRAMES and not source.done: return
+		if frames - _sent < _start_frames and not source.done: return
 		_fill(frames); voice.stream_paused = false; _rebuffering = false
 		_log("resume")
 	_fill(frames)

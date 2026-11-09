@@ -32,18 +32,21 @@ func _init() -> void: set_process(false)
 
 func start(url: String, body: String, timeout: float) -> Error:
 	cancel()
-	if not url.begins_with("http://"): return ERR_INVALID_PARAMETER
-	var authority := url.trim_prefix("http://").get_slice("/", 0)
+	# HTTPS reaches a remote router (a Colab tunnel); certificates are verified.
+	var tls := url.begins_with("https://")
+	if not tls and not url.begins_with("http://"): return ERR_INVALID_PARAMETER
+	var scheme := "https://" if tls else "http://"
+	var authority := url.trim_prefix(scheme).get_slice("/", 0)
 	var host := authority.get_slice(":", 0)
-	var port := authority.get_slice(":", 1).to_int() if ":" in authority else 80
-	var path := url.substr("http://".length() + authority.length())
+	var port := authority.get_slice(":", 1).to_int() if ":" in authority else (443 if tls else 80)
+	var path := url.substr(scheme.length() + authority.length())
 	if path.is_empty(): path = "/"
 	_request = {"path":path,"body":body}
 	reset_decoder()
 	_sent = false; _responded = false; _framed = false; _code = 0; _headers.clear(); _wav.clear(); _expected = -1
 	_start = Time.get_ticks_msec(); _deadline = _start + int(timeout * 1000.0)
 	_http = HTTPClient.new(); _http.blocking_mode_enabled = false
-	var error := _http.connect_to_host(host, port)
+	var error := _http.connect_to_host(host, port, TLSOptions.client() if tls else null)
 	if error != OK: return error
 	active = true; set_process(true)
 	return OK
