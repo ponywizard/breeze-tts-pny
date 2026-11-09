@@ -42,7 +42,7 @@ With the **Breeze TTS PNY** game mod (0.1.1 or later; 0.1.0 only accepts `http:/
 
 Listen to the sample below the start cell to check the voice. Each Colab run gives a new link: paste the new one in the game.
 
-The engine is [Breeze-TTS-2.cpp](https://github.com/HoppouAI/Breeze-TTS-2.cpp) at a pinned revision with Breeze TTS PNY's adapter patch; the game-facing server is the companion's own router code at the v0.2.0 release commit. The model, voices, patches and router files are checked against pinned SHA-256 hashes before use. The Breeze TTS 2 weights are under the BreezeBlue Research and Non-Commercial License, and the voices come from the show: for personal, non-commercial use.
+The engine is [Breeze-TTS-2.cpp](https://github.com/HoppouAI/Breeze-TTS-2.cpp) at a pinned revision with Breeze TTS PNY's adapter patch; the game-facing server is the companion's own router code at the pinned 0.2.1 router source commit. The model, voices, patches and router files are checked against pinned SHA-256 hashes before use. The Breeze TTS 2 weights are under the BreezeBlue Research and Non-Commercial License, and the voices come from the show: for personal, non-commercial use.
 
 The link lets anyone who has it use this session's voices, and the lines the game speaks pass through Google's and Cloudflare's servers; don't share it. Colab sessions are temporary and Google limits free GPU time, so this isn't dependable hosting. See [Colab's FAQ](https://research.google.com/colaboratory/faq.html).
 """),

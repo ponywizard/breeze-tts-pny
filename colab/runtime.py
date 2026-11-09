@@ -39,14 +39,14 @@ import wave
 ENGINE_URL = "https://github.com/HoppouAI/Breeze-TTS-2.cpp.git"
 ENGINE_TAG = "v0.1.6"
 ENGINE_REVISION = "87b43667ca5597f826441991e416a279ed7373b9"
-PNY_COMMIT = "14d5c08b06763c1b4763802c798b4cda3f1a94e0"  # breeze-tts-pny v0.2.0
+PNY_COMMIT = "8b636164ed1600ea4bf80e77d4db556f3cc9b2ed"  # breeze-tts-pny 0.2.1 router source
 PNY_RAW = f"https://raw.githubusercontent.com/ponywizard/breeze-tts-pny/{PNY_COMMIT}/"
 PATCHES = {
     "breeze-native-lora.patch": "2761bd9fa240d772a0c593ee8a3243b6b201539ac162b801251d650ac79d59d9",
     "breeze-portable-build.patch": "3ee579187b867ad2bccd7a3966fc124378c7b9f3fceea2766a3b191e61ae37de",
 }
 ROUTER_FILES = {
-    "__init__.py": "2d831a3a9ab0d56f6ab9baee2249fda3c3c7effe24b44e4877609ff2ffcab47e",
+    "__init__.py": "890b462b4a0d89e31e773b1252d29371b1d4d4a13c9fee1c86697f816f0e5c15",
     "bank.py": "ee745ac1a44085dbbdfee79ae1636f4c3fc84c3cebb72f61ef7cc0c8f9ca3732",
     "events.py": "4279bd5d4fb29ebfa4c946b482da810261f19b4aad1c35ee29d75de8346b0d4c",
     "files.py": "c70f4661c350662374e9603f2c05d8de166361425c13f501ce1759fbf94b232e",
