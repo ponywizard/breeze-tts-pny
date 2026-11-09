@@ -1,6 +1,6 @@
 # Companion validation
 
-Companion 0.2.0 uses Python 3.11+ and its standard library. The selected `curated-ponies-20261107` bank contains 139 Breeze reference caches and six Mane Six adapters. Cache transcripts and reference hashes were compared with the native engine before export. The pack excludes private endpoints, capture settings, absolute development paths and trial voices.
+Companion 0.2.1 uses Python 3.11+ and its standard library. The selected `curated-ponies-20261107` bank contains 139 Breeze reference caches and six Mane Six adapters. Cache transcripts and reference hashes were compared with the native engine before export. The pack excludes private endpoints, capture settings, absolute development paths and trial voices.
 
 ## Installed service
 
@@ -22,7 +22,9 @@ The shared Python unit suite also covers buffered WAV, busy/error handling, orig
 
 Linux flatscreen play included all six adapter voices and Angel Wings. Linux PCVR with WiVRn included 11 speaking identities. Both sessions saved successfully; a few live lines rebuffered and recovered, with engine warnings/errors noted in [VALIDATION.md](VALIDATION.md).
 
-Native Windows flatscreen play used the matching cross-built executable/mod on the RX 6700 XT with AMD's Vulkan driver. All 486 completed PCM streams succeeded; all 92 live playback starts finished without underruns. Twilight, Rarity and Noi spoke, and autosave succeeded. One early STT transport warning was separate from the TTS transport. Router stdout was not captured in that session; native adapter acknowledgement is required by the verified companion code before PCM is returned.
+Earlier native Windows flatscreen play with mod 0.1.0 used the matching cross-built executable/mod on the RX 6700 XT with AMD's Vulkan driver. All 486 completed PCM streams succeeded; all 92 live playback starts finished without underruns. Twilight, Rarity and Noi spoke, and autosave succeeded. One early STT transport warning was separate from the TTS transport. Router stdout was not captured in that session; native adapter acknowledgement is required by the verified companion code before PCM is returned.
+
+The November 9 mod 0.1.1 Windows smoke pass verified all seven standalone voice routes, 28 game streams and 17 live playback starts/finishes; one line rebuffered and recovered. The detailed observations and manual coverage gaps are in [VALIDATION.md](VALIDATION.md).
 
 Windows PCVR is untested and ships with that limitation; support is handled case by case. Other hardware, Windows/driver versions, game versions and every voice have not been comprehensively qualified. See [VALIDATION.md](VALIDATION.md) for the support matrix and the distinction between manual sessions and cleanup rebuilds.
 

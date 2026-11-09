@@ -6,7 +6,7 @@ Native Windows flatscreen playtesting passed on an RX 6700 XT. Windows PCVR has 
 
 ## Install the companion
 
-1. Download `breeze-tts-pny-0.2.0-windows-x86_64.zip` and `breeze-pny-curated-voices-20261107.tar.gz` from the same release. The `.pck` game mod is already included in the ZIP. `WINDOWS-SHA256SUMS` records the expected download hashes.
+1. Download `breeze-tts-pny-0.2.1-windows-x86_64.zip` and `breeze-pny-curated-voices-20261107.tar.gz` from the same release. The `.pck` game mod is already included in the ZIP. `WINDOWS-SHA256SUMS` records the expected download hashes.
 2. Extract the ZIP to a user-owned folder, such as `C:\BreezePNY`. Place the voice-pack `.tar.gz` **inside that extracted folder**, alongside `setup.cmd`. Leave the voice pack compressed. Keep the folder in its intended location before setup.
 3. Run `setup.cmd`. The companion installs in the folder's `companion` subdirectory. Setup copies the voices and adapters, downloads the pinned Q8 model (about 3.6 GB), and verifies the files. Allow at least 6 GB of free space and keep the setup window open until it finishes. Progress and checksum verification are shown in the terminal.
 4. Run `start-companion.cmd`. Wait for the `ready` event. Leave this window open while playing; Ctrl+C stops the companion and its owned native process.
@@ -22,7 +22,7 @@ The file must match the release's pinned SHA-256. A previously verified installe
 ## Install and configure the game mod
 
 1. Start the supported game and open **Settings → Mods → Open mods folder**.
-2. Copy `game-mod\breeze_tts_pny-0.1.0-windows-x86_64.pck` from the extracted ZIP into that folder. Keep one copy of Breeze TTS PNY and remove previous development PCM/playback/optimization packs. Restart the game.
+2. Copy `game-mod\breeze_tts_pny-0.1.1-windows-x86_64.pck` from the extracted ZIP into that folder. Keep one copy of Breeze TTS PNY and remove previous development PCM/playback/optimization packs. Restart the game.
 3. Select the MOSS-compatible TTS provider, enable TTS and automatic voices, and set its URL to `http://127.0.0.1:18792/tts`.
 4. Start the companion before loading a world, then check a conversation. Configure in flatscreen first if that is easier before using PCVR.
 

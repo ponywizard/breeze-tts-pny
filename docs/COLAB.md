@@ -2,7 +2,7 @@
 
 The experimental [Colab notebook](https://colab.research.google.com/github/ponywizard/breeze-tts-pny/blob/main/colab/Home_Equestria_Breeze_Voices.ipynb) runs the companion's speech service on a free Colab T4 GPU for players without a suitable graphics card. Its [source notebook](https://github.com/ponywizard/breeze-tts-pny/blob/main/colab/Home_Equestria_Breeze_Voices.ipynb) is on GitHub. It gives the game an `https://….trycloudflare.com/tts` link.
 
-A complete T4/CUDA session through the public tunnel still needs validation. The automated checks use a stand-in engine. Game mod 0.1.1 is currently a source build; the published v0.2.0 release includes game mod 0.1.0.
+A complete T4/CUDA session through the public tunnel still needs validation. The automated checks use a stand-in engine. Release v0.2.1 includes game mod 0.1.1.
 
 ## Use
 

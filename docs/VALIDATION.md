@@ -1,6 +1,6 @@
 # Validation and support scope
 
-This release targets Home: Equestria **0.3.0-maredev**, Godot **4.5**, with game mod **0.1.0** and companion **0.2.0**. Native manual coverage used an AMD Radeon RX 6700 XT.
+This release targets Home: Equestria **0.3.0-maredev**, Godot **4.5**, with game mod **0.1.1** and companion **0.2.1**. Native manual coverage used an AMD Radeon RX 6700 XT. The 0.1.1 game packs are the exact bytes used in the November 9 Linux and Windows tests. Companion 0.2.1 changes the package version only; its server implementation and native assets match companion 0.2.0 used in those tests.
 
 | Configuration | Coverage |
 | --- | --- |

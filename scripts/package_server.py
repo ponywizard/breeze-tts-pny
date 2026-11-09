@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'server'))
 from breeze_pny import __version__
 from breeze_pny.files import sha
-from release_files import PUBLIC_DOCUMENTS
+from release_files import PUBLIC_DOCUMENTS, PUBLIC_INSTALLER_FILES
 
 
 def main():
@@ -22,11 +22,9 @@ def main():
     parser.add_argument('--output', type=Path, default=ROOT / f'dist/breeze-tts-pny-server-{__version__}-linux-x86_64.tar.gz')
     args = parser.parse_args()
     files = {}
-    for folder in ('server', 'installer'):
-        for path in sorted((ROOT / folder).rglob('*')):
-            if path.is_file() and '__pycache__' not in path.parts:
-                files[str(path.relative_to(ROOT))] = path.read_bytes()
-    for name in PUBLIC_DOCUMENTS:
+    for path in sorted((ROOT / 'server').rglob('*.py')):
+        files[path.relative_to(ROOT).as_posix()] = path.read_bytes()
+    for name in PUBLIC_INSTALLER_FILES + PUBLIC_DOCUMENTS:
         files[name] = (ROOT / name).read_bytes()
     for path in (ROOT / 'native/breeze').glob('LICENSE*'):
         files['licenses/' + path.name] = path.read_bytes()

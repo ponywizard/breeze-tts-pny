@@ -10,10 +10,10 @@ Download the files for your operating system from the same [release](https://git
 
 | Platform | Files to download |
 | --- | --- |
-| Windows | `breeze-tts-pny-0.2.0-windows-x86_64.zip` and `breeze-pny-curated-voices-20261107.tar.gz` |
-| Linux | `breeze_tts_pny-0.1.0-linux-x86_64.pck`, `breeze-tts-pny-server-0.2.0-linux-x86_64.tar.gz` and `breeze-pny-curated-voices-20261107.tar.gz` |
+| Windows | `breeze-tts-pny-0.2.1-windows-x86_64.zip` and `breeze-pny-curated-voices-20261107.tar.gz` |
+| Linux | `breeze_tts_pny-0.1.1-linux-x86_64.pck`, `breeze-tts-pny-server-0.2.1-linux-x86_64.tar.gz` and `breeze-pny-curated-voices-20261107.tar.gz` |
 
-The Windows ZIP includes the game mod, companion, native runtime and Python. The Linux companion archive includes its native runtime and uses your installed Python 3.11+. Game mod **0.1.0** and companion **0.2.0** are the matching versions in this release.
+The Windows ZIP includes the game mod, companion, native runtime and Python. The Linux companion archive includes its native runtime and uses your installed Python 3.11+. Game mod **0.1.1** and companion **0.2.1** are the matching versions in this release.
 
 You need an AVX2-capable x86_64 CPU and a working Vulkan GPU driver. Setup downloads a pinned model of about 3.6 GB; allow at least 6 GB of free space for the companion and its assets. Linux binaries require glibc 2.38+ and `GLIBCXX_3.4.32`. macOS and standalone Quest builds are not included.
 
@@ -39,7 +39,7 @@ The November 5 PCVR captures used an earlier runtime with **one resident Rainbow
 
 1. **Set up the companion.** Extract the companion archive, then place the downloaded voice-pack archive inside its extracted folder. Leave the voice pack compressed. On Windows, run `setup.cmd`; on Linux, follow [the Linux setup commands](docs/SERVER.md#install). Setup verifies the runtime, voices, adapters and model. Windows needs no separate Python installation.
 2. **Start speech generation.** On Windows, run `start-companion.cmd`. On Linux, use the `breeze-pny serve` command printed by setup. Wait for the `ready` event and leave that terminal open while playing.
-3. **Install the game mod.** In the game, open **Settings → Mods → Open mods folder**. Copy in the `.pck` for your platform: Windows includes it in the ZIP's `game-mod` folder; Linux provides it as a separate download. Restart the game.
+3. **Install the game mod.** In the game, open **Settings → Mods → Open mods folder**. Copy in the `.pck` for your platform: Windows includes it in the ZIP's `game-mod` folder; Linux provides it as a separate download. Replace the older Breeze pack so only one copy remains, then restart the game.
 4. **Connect TTS.** Select the game's MOSS-compatible TTS provider, enable speech and automatic voices, and set the URL to **`http://127.0.0.1:18792/tts`**. Start the companion before loading a world. Your LLM/STT settings stay separate.
 5. **Check a conversation.** Talk to a pony and check speech and mouth movement. Configure the settings in flatscreen first if that is easier before entering VR.
 
@@ -47,7 +47,7 @@ The MOSS label is the game's existing HTTP provider setting; the companion gener
 
 Detailed instructions, offline installation, updates and troubleshooting: [Windows](docs/WINDOWS.md) · [Linux](docs/SERVER.md). To run the companion on a different computer, see [network setup](docs/SERVER.md#another-machine).
 
-No suitable GPU? The experimental [Colab notebook](docs/COLAB.md) runs the same speech service on a free Colab GPU and gives an `https://` link (game mod 0.1.1 or later, currently built from source). A complete Colab session still needs validation.
+No suitable GPU? The experimental [Colab notebook](docs/COLAB.md) runs the same speech service on a free Colab GPU and gives an `https://` link (game mod 0.1.1 or later). A complete Colab session still needs validation.
 
 A fresh game folder uses the game's usual saves. The optional Windows `prepare-playtest.cmd` helper creates a **separate disposable playtest profile**; it is not required for normal installation. See [isolated testing](docs/WINDOWS.md#optional-isolated-playtest).
 

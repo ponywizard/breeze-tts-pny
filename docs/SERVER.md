@@ -15,17 +15,17 @@ For Windows, use [the Windows package](WINDOWS.md), which includes Python and th
 
 Download these matching release files:
 
-- `breeze-tts-pny-server-0.2.0-linux-x86_64.tar.gz`
+- `breeze-tts-pny-server-0.2.1-linux-x86_64.tar.gz`
 - `breeze-pny-curated-voices-20261107.tar.gz`
-- `breeze_tts_pny-0.1.0-linux-x86_64.pck` for the game
+- `breeze_tts_pny-0.1.1-linux-x86_64.pck` for the game
 
 `SERVER-SHA256SUMS` records the companion/voice archive hashes; `SHA256SUMS` records the game-pack hash. The native runtime is included in the companion archive.
 
 Extract the server archive, put the voice-pack `.tar.gz` inside the extracted folder alongside `installer/`, and leave the voice pack compressed:
 
 ```bash
-tar -xzf breeze-tts-pny-server-0.2.0-linux-x86_64.tar.gz
-cd breeze-tts-pny-server-0.2.0-linux-x86_64
+tar -xzf breeze-tts-pny-server-0.2.1-linux-x86_64.tar.gz
+cd breeze-tts-pny-server-0.2.1-linux-x86_64
 # Copy the downloaded voice archive into this directory before continuing.
 breeze_pny_prefix="${XDG_DATA_HOME:-$HOME/.local/share}/breeze-tts-pny"
 python3 installer/install.py --prefix "$breeze_pny_prefix"
