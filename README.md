@@ -19,7 +19,11 @@ You need an AVX2-capable x86_64 CPU and a working Vulkan GPU driver. Setup downl
 
 ## GPU memory
 
-Measured on a **Radeon RX 6700 XT (12 GB, 11.98 GiB usable)** running Linux PCVR with WiVRn:
+Measured on a **Radeon RX 6700 XT (12 GB, 11.98 GiB usable)** on Linux, with LLM/STT running on another machine.
+
+**Current six-adapter pack, flatscreen (November 9):** the game and local Q8 Breeze peaked at **10.26 GiB total VRAM**, with **1.73 GiB minimum free** during active speech.
+
+Earlier **PCVR with WiVRn** measurements:
 
 | Setup | Sampled total VRAM peak | Minimum free VRAM |
 | --- | --- | --- |
@@ -27,9 +31,9 @@ Measured on a **Radeon RX 6700 XT (12 GB, 11.98 GiB usable)** running Linux PCVR
 | Game + local Q8 Breeze loaded, speech still remote | 10.85 GiB | 1.14 GiB |
 | Game + local Q8 Breeze generating speech | 10.97 GiB | 1.01 GiB |
 
-These are whole-card measurements, including the desktop and VR runtime. The observed difference suggests budgeting **roughly 4 GiB beyond the game's own usage, plus spare capacity**, as a starting estimate for Q8 speech. Other local models, scenes and graphics settings also need room; rendering and speech share GPU compute time as well.
+These are whole-card measurements, including the desktop and VR runtime where used. The differences between the PCVR rows suggest budgeting **roughly 4 GiB beyond the game's own usage, plus spare capacity**, as a starting estimate for Q8 speech. Other local models, scenes and graphics settings also need room; rendering and speech share GPU compute time as well.
 
-The November 5 captures used an earlier runtime with **one resident Rainbow LoRA**, with LLM/STT on another machine. The current six-adapter pack has not received the same VRAM profiling. [Measurement details and limits](docs/VALIDATION.md#gpu-memory-measurements) describe the test setup.
+The November 5 PCVR captures used an earlier runtime with **one resident Rainbow LoRA**. The current-pack flatscreen result is a different workload, so the difference between those figures does not measure adapter overhead. [Measurement details and limits](docs/VALIDATION.md#gpu-memory-measurements) describe the test setup.
 
 ## Install
 
