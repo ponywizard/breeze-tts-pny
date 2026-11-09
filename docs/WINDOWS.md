@@ -51,6 +51,8 @@ Use this only when you want a disposable profile instead of your normal game sav
 
 The helper checks the game version and verifies that its user-data directory is `home-equestria-breeze-windows-playtest` before installing the mod or changing TTS settings. It creates `override.cfg` and `play-breeze-flat.cmd` in that game folder. It refuses to replace an unrelated `override.cfg`.
 
+You can also double-click `prepare-playtest.cmd` and paste the separate game folder's path when prompted. Repeating preparation backs up previous Breeze packs outside the active mods directory and keeps one bundled candidate active. It records the selected folder for the smoke kit's log collector.
+
 Start the companion, then run `play-breeze-flat.cmd` from the prepared game folder. This profile needs its own LLM and optional STT configuration. Keep `override.cfg` in place for that folder to continue using the separate profile. A fresh game folder by itself does not isolate saves.
 
 ## Troubleshooting

@@ -1,0 +1,22 @@
+BREEZE PNY - WINDOWS SMOKE TEST
+Prepared @DATE@ | Game mod @MOD_VERSION@ | Companion @COMPANION_VERSION@
+
+This is an offline test kit. The model, 139 voices, six adapters and Python
+are already installed. You do not need setup.cmd or a model download.
+The current candidate still needs this native Windows smoke test.
+
+1. Copy the WHOLE BreezePNY folder from the thumb drive to your Windows
+   user folder. Work from that local copy, not from the thumb drive.
+2. Open PLAYTEST-READY.txt for the numbered, step-by-step instructions.
+3. The order is: start-companion.cmd, CHECK-VOICES.cmd,
+   START-LAB-TUNNEL.cmd, CHECK-LAB.cmd, prepare-playtest.cmd,
+   then play-breeze-flat.cmd in your separate GAME folder.
+4. After playing, fill in SMOKE-CHECKLIST.txt and run COLLECT-LOGS.cmd.
+   Copy the test-results folder back to BreezePNY on the thumb drive.
+
+Use a separate Home: Equestria 0.3.0-maredev Windows game folder.
+The helper selects a separate profile and updates the mod to @MOD_VERSION@.
+Your normal game saves are not used by that profile.
+
+Read PLAYTEST-READY.txt before starting. It explains the Windows clicks,
+the SSH login, the game settings, and which windows must stay open.

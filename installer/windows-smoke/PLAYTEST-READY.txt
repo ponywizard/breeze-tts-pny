@@ -1,0 +1,137 @@
+BREEZE PNY - STEP-BY-STEP WINDOWS FLATSCREEN TEST
+Prepared @DATE@ | Mod @MOD_VERSION@ | Companion @COMPANION_VERSION@
+Candidate source: @SOURCE_COMMIT@
+
+WHAT THIS TEST DOES
+The game and Breeze speech generation run on this PC's GPU.
+The existing AI lab on the other computer supplies the LLM and optional STT.
+The kit includes its verified model, voices, adapters, runtime and Python.
+No compiler, pip, setup.cmd, administrator launch or new model download is
+needed for this already-installed kit.
+
+A. COPY THE KIT TO THE WINDOWS DISK
+1. Start Windows and press Windows+E to open File Explorer.
+2. Open This PC, open the thumb drive, and click the BreezePNY folder once.
+3. Press Ctrl+C to copy the entire folder.
+4. Press Windows+R, type %USERPROFILE%, and press Enter.
+   This opens your Windows user folder.
+5. If a BreezePNY folder is already there, rename that old copy first
+   (select it, press F2, and name it BreezePNY-before-@MOD_VERSION@).
+   Keep that old copy until the test is finished.
+6. Press Ctrl+V and wait for copying to finish. The model is several GB.
+7. Open the NEW local BreezePNY folder. Run every kit helper below from
+   this local copy. The kit on the thumb drive is your backup.
+
+B. START LOCAL BREEZE
+1. Double-click start-companion.cmd.
+2. A terminal window opens. Wait for the JSON line with "event": "ready".
+   Loading and hash checks can take a little while; leave it open.
+3. Keep this window open throughout the game test.
+   Its TTS URL is http://127.0.0.1:18792/tts.
+   It generates speech locally; this port is not forwarded to the AI lab.
+
+C. CHECK VOICES BEFORE OPENING THE GAME
+1. With Breeze ready, double-click CHECK-VOICES.cmd.
+2. It checks all six adapters and Spike's base voice, saving seven WAVs.
+   Wait for VOICE CHECKS PASSED. Press a key when it asks.
+3. Open test-results, then voice-samples. Double-click the WAVs to listen.
+   Check that they play and sound like the intended ponies. The command
+   output is saved as test-results\voice-check.txt.
+4. If this fails, keep the companion window open, note its error, and use
+   the troubleshooting section below. A voice check needs no AI lab.
+
+D. CONNECT THE LLM AND STT LAB
+1. Keep the AI lab running on the other computer, as for the Linux test.
+2. In the local BreezePNY folder, double-click START-LAB-TUNNEL.cmd.
+   It connects to @SSH_TARGET@ and forwards only LLM/STT ports 18791/18790.
+3. On a first SSH connection, Windows may ask whether to trust the host.
+   The trusted ED25519 fingerprint from the existing Linux connection is:
+   @HOST_KEY@
+   If that is the fingerprint shown, type yes and press Enter.
+4. If asked for a password, enter your usual SSH password for the lab login.
+   Password entry does not show characters or dots; this is normal.
+5. A successfully connected tunnel may just sit quietly. Leave it open.
+   This tunnel must be recreated on Windows; the Linux one does not carry over.
+6. Double-click CHECK-LAB.cmd in the kit folder. Expect LAB CHECKS PASSED.
+   Press a key to close that check window. Keep the tunnel window open.
+
+E. PREPARE THE SEPARATE GAME FOLDER
+1. Use the separate extracted Home: Equestria 0.3.0-maredev Windows game
+   folder from the previous playtest, or extract a fresh Windows release
+   into a NEW folder. Keep your regular game installation separate.
+2. Open that game folder. It should contain HomeEquestria.exe,
+   HomeEquestria.pck and HomeEquestria-data.pck.
+3. Press Alt+D to select its address bar, then Ctrl+C to copy the folder path.
+4. Return to the local BreezePNY kit and double-click prepare-playtest.cmd.
+5. At "Playtest game folder:", paste the copied path with Ctrl+V and press Enter.
+6. Wait for "Prepared isolated profile". It should end in:
+   home-equestria-breeze-windows-playtest
+   The helper backs up older Breeze packs outside the active mods folder,
+   installs @MOD_VERSION@, and creates play-breeze-flat.cmd in the GAME folder.
+7. Leave override.cfg in that separate game folder; it selects the isolated
+   profile. Your normal game folder and normal saves remain separate.
+
+F. LAUNCH AND CONFIGURE THE GAME
+1. With Breeze ready and the lab tunnel open, double-click
+   play-breeze-flat.cmd in the GAME folder (not HomeEquestria.exe).
+2. Open Settings > Mods. Confirm Breeze TTS PNY version @MOD_VERSION@ is enabled.
+   There should be one active Breeze pack. Restart if the game requests it.
+3. In AI/provider settings, use these lab values if this isolated profile
+   does not already have them. Preserve any credentials you normally use.
+
+   LLM: OpenAI-compatible / openai
+   Base URL: http://127.0.0.1:18791/v1
+   Model: @LLM_MODEL@
+
+   STT (optional): Local / local
+   URL: http://127.0.0.1:18790/transcribe
+   Model: @STT_MODEL@
+   Backend: nemo-speech.cpp
+   Input: push-to-talk; choose your Windows microphone.
+   You can type your messages for this TTS test if microphone setup gets in the way.
+
+   TTS: Character voices via server; Local moss-tts / MOSS-compatible
+   URL: http://127.0.0.1:18792/tts
+   Enable speech and automatic voices.
+
+4. Load your disposable test world, or create one if this profile has none.
+5. Play for about five minutes: talk with two or three ponies, try a longer
+   reply and one interruption, and check that mouths follow the speech.
+6. Save and quit normally. Relaunch once to check that the same world loads.
+   No F9 step is needed; the stock game's F9 profiler is unavailable.
+
+G. FINISH AND BRING THE LOGS BACK
+1. Close the game normally so it can save.
+2. Click the companion terminal, press Ctrl+C, and wait for it to stop.
+3. Click the SSH tunnel terminal and press Ctrl+C to close the tunnel.
+4. Open SMOKE-CHECKLIST.txt in the local kit, fill in RESULTS at the end,
+   then press Ctrl+S to save it.
+5. Double-click COLLECT-LOGS.cmd. It creates a ZIP under test-results.
+   This copies test logs and your checklist, not AI credentials or saves.
+   Game logs can contain conversations; keep the collected ZIP private.
+6. Copy the test-results folder from the local kit back into BreezePNY on
+   the thumb drive. Keep existing result ZIPs if Windows asks about merging.
+7. Shut Windows down normally before returning to Linux. Tell me how it
+   looked/sounded and whether any step failed; I can inspect the result ZIP.
+
+TROUBLESHOOTING
+- "Already installed": this kit is ready; use start-companion.cmd, not setup.cmd.
+- Companion exits: note the message. Logs are in companion\logs. Check the GPU
+  driver and that another companion is not already running. A recently closed
+  native port can take up to 75 seconds to clear.
+- Tunnel exits: read the final message. The AI lab must be running and reachable.
+  Its configured target is @SSH_TARGET@. Do not forward TTS port 18792.
+- "ssh is not recognized": search Windows Start for Optional Features, open it,
+  and add OpenSSH Client if absent. Only the client is needed. Microsoft guide:
+  https://learn.microsoft.com/en-us/windows/terminal/tutorials/ssh
+- Lab check fails: leave the tunnel open and read CHECK-LAB's error. Breeze's
+  standalone voice checks can still work while the LLM/STT connection is down.
+- Preparation refuses override.cfg: that game folder has an unrelated override.
+  Use a fresh separate extraction instead of replacing that override.
+- Speech uses the wrong provider: check the exact TTS URL and automatic voices.
+  Start Breeze before loading the world for this first smoke pass.
+- Newer source mod @MOD_VERSION@ should also recover from a late-started router
+  on a later speech request. This optional recovery check can follow the basic pass.
+
+Keyboard shortcuts reference:
+https://support.microsoft.com/en-us/accessibility/windows/keyboard-shortcuts-in-windows

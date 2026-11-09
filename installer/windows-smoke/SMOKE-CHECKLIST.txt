@@ -1,0 +1,29 @@
+WINDOWS SMOKE TEST - MOD @MOD_VERSION@ / COMPANION @COMPANION_VERSION@
+
+Check these during the run:
+[ ] Local kit copied from USB; start-companion.cmd reaches ready.
+[ ] CHECK-VOICES.cmd passes all six adapters and Spike's base voice.
+[ ] The sample WAVs play and sound correct.
+[ ] Lab tunnel opens and CHECK-LAB.cmd passes.
+[ ] prepare-playtest.cmd selects home-equestria-breeze-windows-playtest.
+[ ] Settings > Mods shows one active Breeze TTS PNY @MOD_VERSION@.
+[ ] Conversations use local Breeze speech, with mouth movement.
+[ ] Short and longer replies work; interruption and the next reply work.
+[ ] Saving, quitting, relaunching and loading the same test world work.
+[ ] COLLECT-LOGS.cmd creates a ZIP in test-results.
+[ ] test-results was copied back to BreezePNY on the thumb drive.
+
+RESULTS - type below, then press Ctrl+S
+Date/time:
+Windows version:
+GPU / driver (if known):
+Voices heard in the game:
+Speech and lip-sync:
+Interruptions / stutters:
+Save and reload:
+Errors or confusing steps:
+Overall: good / problems
+
+The earlier @MOD_VERSION@ Linux run passed. This checklist is the separate native
+Windows smoke test; Wine checks do not replace it. Windows PCVR is not part of
+this run. Do not use F9 for the stock game's missing profiler.

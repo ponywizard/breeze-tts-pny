@@ -9,11 +9,37 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'server'))
-from breeze_pny.files import write_json
+from breeze_pny.files import sha, write_json
 from breeze_pny.platforms import platform_id
 
 PROFILE = 'home-equestria-breeze-windows-playtest'
 MARKER = '; Breeze TTS PNY isolated Windows playtest'
+
+
+def install_mod_pack(pack, mods):
+    """Keep one active Breeze pack; preserve previous candidates outside mods/."""
+    mods.mkdir(parents=True, exist_ok=True)
+    target = mods / pack.name
+    temporary = target.with_suffix('.pck.pending')
+    old = list(mods.glob('breeze_tts_pny-*-windows-x86_64.pck'))
+    try:
+        shutil.copy2(pack, temporary)
+        for previous in old:
+            digest = sha(previous)
+            if previous.name == pack.name and digest == sha(pack):
+                continue
+            backup = mods.parent / 'breeze-mod-backups' / digest / previous.name
+            if backup.exists() and sha(backup) != digest:
+                raise ValueError('Previous mod backup failed verification')
+            if not backup.exists():
+                backup.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(previous, backup)
+        temporary.replace(target)
+        for previous in old:
+            if previous != target:
+                previous.unlink()
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def prepare(game):
@@ -51,7 +77,7 @@ def prepare(game):
         if len(packs) != 1:
             raise ValueError('Expected exactly one Breeze TTS PNY Windows pack in game-mod; setup stopped')
         pack = packs[0]
-        shutil.copy2(pack, mods / pack.name)
+        install_mod_pack(pack, mods)
         config = user / 'ai_config.json'
         current = json.loads(config.read_text(encoding='utf-8')) if config.exists() else {}
         if config.exists() and not config.with_suffix('.before-breeze.json').exists():
@@ -63,6 +89,8 @@ def prepare(game):
                     '"HomeEquestria.exe" --xr-mode off --log-file "breeze-windows-playtest.log" -- --verbose-log %*\n'
                     'set "result=%errorlevel%"\npopd\nexit /b %result%\n')
         (game / 'play-breeze-flat.cmd').write_bytes(launcher.replace('\n', '\r\n').encode('utf-8'))
+        write_json(ROOT / 'playtest-location.json', {'game_directory': str(game), 'profile': PROFILE,
+                                                   'mod_pack': pack.name, 'mod_sha256': sha(pack)})
         prepared = True
         print('Prepared isolated profile:', user)
         print('Start the companion, then run:', game / 'play-breeze-flat.cmd')
@@ -76,9 +104,21 @@ def prepare(game):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('game', type=Path)
+    parser.add_argument('game', nargs='?', type=Path)
     args = parser.parse_args()
-    try: prepare(args.game)
-    except (OSError, ValueError, subprocess.SubprocessError) as error:
+    try:
+        game = args.game
+        if game is None:
+            print('Choose your separate Home: Equestria Windows PLAYTEST folder.')
+            print('Open that folder in File Explorer, press Alt+D then Ctrl+C,')
+            print('then paste the path here and press Enter. Your normal game folder stays separate.')
+            value = input('Playtest game folder: ').strip().strip('"')
+            if not value:
+                raise ValueError('No game folder selected')
+            game = Path(value)
+        if game.name.lower() == 'homeequestria.exe':
+            game = game.parent
+        prepare(game)
+    except (OSError, ValueError, EOFError, subprocess.SubprocessError) as error:
         print('Playtest setup failed:', error, file=sys.stderr)
         sys.exit(1)
