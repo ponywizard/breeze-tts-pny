@@ -48,6 +48,18 @@ The default actor is OpenPony. `--actor spike` instantiates Spike's actual expor
 
 Godot release templates strip GDScript `assert`. The checked-in tests use explicit failure branches instead.
 
+## Manual Linux GPU memory capture
+
+`scripts/capture_playtest.py` launches the exported game with XR disabled and an existing isolated profile. Start the local companion separately and wait for its ready event, then run:
+
+```bash
+python3 scripts/capture_playtest.py --config build/local-playtest.json
+```
+
+The private JSON file supplies absolute paths for `game_directory`, `user_data_home` (the directory above `home-equestria-public`), `mod_pack` and `output_directory`, plus `mod_sha256` and the loopback `companion_url`. `gpu_device` optionally selects an AMD sysfs device when more than one is present. The helper checks the staged mod hash and profile's TTS endpoint before launch.
+
+Recording starts with that command and ends when its game exits, with no pre-launch countdown or F9 requirement. Each run saves game logs, 100 ms whole-card VRAM/GTT/utilization samples, the game exit code, and a receipt checking that samples span gameplay. A sampling failure stops only the game it launched. The companion remains under its original terminal's control. This captures GPU memory; it does not provide a full frame-time trace. The stock export may omit the script needed by its F9 profiler.
+
 ## Release artifact audit
 
 Build/package outputs are allowlisted; installed configuration, local endpoints, playtest profiles, logs, captured audio and source checkouts are not release inputs. Keep model/reference assets outside Git and publish only the intended release files.
