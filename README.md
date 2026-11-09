@@ -17,6 +17,20 @@ The Windows ZIP includes the game mod, companion, native runtime and Python. The
 
 You need an AVX2-capable x86_64 CPU and a working Vulkan GPU driver. Setup downloads a pinned model of about 3.6 GB; allow at least 6 GB of free space for the companion and its assets. Linux binaries require glibc 2.38+ and `GLIBCXX_3.4.32`. macOS and standalone Quest builds are not included.
 
+## GPU memory
+
+Measured on a **Radeon RX 6700 XT (12 GB, 11.98 GiB usable)** running Linux PCVR with WiVRn:
+
+| Setup | Sampled total VRAM peak | Minimum free VRAM |
+| --- | --- | --- |
+| Game, speech generated on another machine | 7.03 GiB | 4.96 GiB |
+| Game + local Q8 Breeze loaded, speech still remote | 10.85 GiB | 1.14 GiB |
+| Game + local Q8 Breeze generating speech | 10.97 GiB | 1.01 GiB |
+
+These are whole-card measurements, including the desktop and VR runtime. The observed difference suggests budgeting **roughly 4 GiB beyond the game's own usage, plus spare capacity**, as a starting estimate for Q8 speech. Other local models, scenes and graphics settings also need room; rendering and speech share GPU compute time as well.
+
+The November 5 captures used an earlier runtime with **one resident Rainbow LoRA**, with LLM/STT on another machine. The current six-adapter pack has not received the same VRAM profiling. [Measurement details and limits](docs/VALIDATION.md#gpu-memory-measurements) describe the test setup.
+
 ## Install
 
 1. **Set up the companion.** Extract the companion archive, then place the downloaded voice-pack archive inside its extracted folder. Leave the voice pack compressed. On Windows, run `setup.cmd`; on Linux, follow [the Linux setup commands](docs/SERVER.md#install). Setup verifies the runtime, voices, adapters and model. Windows needs no separate Python installation.

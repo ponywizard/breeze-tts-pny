@@ -13,6 +13,16 @@ This release targets Home: Equestria **0.3.0-maredev**, Godot **4.5**, with game
 
 Windows PCVR issues will be investigated case by case. Another Windows VR playtest is not a release prerequisite.
 
+## GPU memory measurements
+
+On November 5, 2026, three Linux PCVR sessions compared remote speech, local Breeze loaded with speech still remote, and local Breeze actively generating speech. The RX 6700 XT exposed 11.984 GiB of usable VRAM. The setup used RADV Vulkan, WiVRn/OpenXR multiview at 1832 × 1919 per eye, Home: Equestria 0.3.0 with Godot 4.5.2, and native Talking Avatar lip-sync. Graphics settings and game pack hashes matched across the runs. LLM, STT and the earlier CPU voice routes stayed on another machine.
+
+Whole-card VRAM counters were sampled every 100 ms across each session, alongside five-minute application frame captures. The session peaks were **7.026 GiB** for remote speech, **10.849 GiB** for loaded local Breeze, and **10.971 GiB** during local speech. Minimum free VRAM was **4.958**, **1.135** and **1.013 GiB**, respectively. These totals include the desktop, game and VR runtime; the engine's separate memory estimate must not be added to them. Brief peaks between samples can be missed.
+
+The local setup used the pinned Q8 model and a Breeze v0.1.6 native-LoRA runtime with **one resident Rainbow adapter**. The current release loads six adapters and has not been profiled with this same protocol. During the active frame capture, five base-adapter voices produced about 1.60 seconds of audio per second of synthesis; Rainbow LoRA was checked during warmup. No playback underruns or failures were observed in these sessions.
+
+The roughly 4 GiB difference between the remote and local session peaks is a memory-planning estimate from these captures. Scenes evolved between runs, so it is not an isolated measurement of Breeze's allocation or rendering cost. Memory fit alone does not establish an acceptable frame rate: average application FPS was 33.21 with remote speech, 27.70 with local Breeze loaded, and 21.63 with active local speech, with scene and pipeline-compilation differences limiting attribution. Larger scenes, different settings/drivers and additional local models can need more capacity.
+
 ## Automated checks
 
 The checks cover:
