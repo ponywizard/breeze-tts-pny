@@ -44,6 +44,8 @@ The checks cover:
 
 Native LoRA numerical, adapter selection/base-restoration and depth-cache/CFG/SwiGLU regression tests also pass. Build and functional-check receipts identify the corresponding local artifacts under ignored `build/`.
 
+The November 9 Windows **0.1.1** smoke candidate passed exported Godot 4.5.2 checks under Wine: enabled/disabled loading, all 55 eye fields, replacement compatibility and atomic refusal, framed transport, identity routing, interruption, recovery and prebuffering. The offline Windows installer verified the model/runtime/voice assets, and the installed companion generated seven WAVs with the six expected adapter acknowledgements and Spike's base route. Bundled Windows Python ran 33 tests with the four Linux GPU-capture tests skipped. Profile upgrade and log collection helpers were also exercised under Wine. The candidate's native Windows manual smoke test remains pending; the earlier native Windows observations below concern the preceding build.
+
 The release cleanup rebuilds native binaries with relative diagnostic source paths and portable Linux library search paths. Automated checks are repeated after rebuilding; the earlier manual listening sessions used the preceding builds. No voice/reference/model settings were changed by that cleanup.
 
 The packaged sentence grouping matches the previously used local VR grouping and has automated exported-game coverage on Linux and Windows under Wine. A subsequent Linux flatscreen listening pass tested the updated packs with Pinkie Pie and Rainbow Dash. The earlier Windows and VR manual sessions preceded this grouping update.

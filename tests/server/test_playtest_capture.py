@@ -7,9 +7,11 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
-import capture_playtest
+if sys.platform == 'linux':
+    import capture_playtest
 
 
+@unittest.skipUnless(sys.platform == 'linux', 'Linux GPU capture helper')
 class PlaytestCaptureChecks(unittest.TestCase):
     def fixture(self, folder, exit_code=0, break_counter=False):
         root = Path(folder)
