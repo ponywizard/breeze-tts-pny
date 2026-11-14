@@ -10,7 +10,7 @@ A complete T4/CUDA session through the public tunnel still needs validation. The
 2. The first run builds Breeze-TTS-2.cpp for the GPU with CUDA (about 10–20 minutes) and downloads the 3.6 GB model and the voice pack. Reruns in the same session reuse them.
 3. Copy the link printed under **BREEZE VOICES READY**. In the game: **Settings → AI Settings → Voices**: *Character voices via server*, Voice server *Local moss-tts*, and paste it as the **moss-tts URL**.
 
-Game mod **0.1.1** or later streams from the link with lip-sync; 0.1.0 accepts only `http://` routers. Without the mod (for example on a standalone Quest) the game asks for whole WAV lines by numbered speaker: the 23 mapped characters keep their voices and other ponies share one.
+Home: Equestria **0.3.1.2** streams from the link with built-in lip-sync. Use game mod **0.1.2** for Breeze character routing across the full roster, including stock Ponese profiles. The published companion release still bundles the older 0.1.1 mod for game 0.3.0. Older games without streaming use whole WAV lines by numbered speaker; only the legacy mapped voices are distinct on that path.
 
 ## What runs
 

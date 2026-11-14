@@ -6,14 +6,14 @@ func check(ok: bool, message: String) -> void:
 	if not ok: failures += 1
 	printerr("PASS " if ok else "FAIL ", "speech grouping: ", message)
 
-func run(disabled: bool) -> int:
+func run(_disabled: bool) -> int:
 	var helper: Script = load("res://world/ai/speech_sentences.gd")
-	var original: Script = helper if disabled else helper.get_base_script()
+	var original: Script = helper
+	helper.note_stream_client(-1, true)
 	var short := "Oh! A cape! That sounds wonderful!"
-	var expected: Array = ["Oh!", "A cape!", "That sounds wonderful!"] if disabled else [short]
-	check(helper.audio_parts(short) == expected, "short reaction groups only when enabled")
+	var expected: Array = [short]
+	check(helper.audio_parts(short) == expected, "built-in streaming groups short reactions")
 	var director: Script = load("res://world/ai/conversation_director.gd")
-	if not disabled: director = director.get_base_script()
 	var solo: Script = director.get_script_constant_map().SENTENCES
 	var group: Script = load("res://world/ai/director_group.gd").get_script_constant_map().SENTENCES
 	check(solo == helper and solo.audio_parts(short) == expected, "solo director captured the selected helper")
@@ -26,7 +26,7 @@ func run(disabled: bool) -> int:
 
 	var long_text := "Oh! " + "A fairly long sentence with every word preserved intact and clear. ".repeat(12)
 	var parts: Array = helper.audio_parts(long_text)
-	check(parts.size() == (13 if disabled else 6), "long contribution request count")
+	check(parts.size() == 6, "long contribution request count")
 	check(" ".join(parts) == " ".join(original.split(long_text)), "all words and punctuation preserved")
 	var long_sentence := "A " + "longer word sequence ".repeat(60) + "ends here."
 	var bounded: Array = helper.audio_parts(long_sentence)
@@ -38,9 +38,8 @@ func run(disabled: bool) -> int:
 	var punctuation := 'Dr. Hooves paid 3.14 bits. "Really?!" Yes… Of course.'
 	check(helper.split(punctuation) == original.split(punctuation), "abbreviations, decimals, quotes and ellipses use the stock splitter")
 	check(" ".join(helper.audio_parts(punctuation)) == " ".join(original.split(punctuation)), "punctuation survives grouping")
-	if not disabled:
-		var tiny := "Oh! " + "This very long opening sentence has plenty of words for everyone to hear and stays with the short reaction that introduces it even when the combined phrase passes the usual synthesis target."
-		check(helper.audio_parts(tiny) == [tiny], "tiny opener stays with a sentence beyond the soft target")
+	var tiny := "Oh! " + "This very long opening sentence has plenty of words for everyone to hear and stays with the short reaction that introduces it even when the combined phrase passes the usual synthesis target."
+	check(helper.audio_parts(tiny) == [tiny], "tiny opener stays with a sentence beyond the soft target")
 
 	var beats := [
 		{"speaker_id":"pinkie_pie", "listener_id":"rainbow_dash", "speech":long_text,
@@ -51,7 +50,7 @@ func run(disabled: bool) -> int:
 		{"speaker_id":"pinkie_pie", "silent_travel":true, "speech":"", "actions":[{"type":"follow"}]}]
 	var before := beats.duplicate(true)
 	var expanded: Array = helper.expand(beats)
-	check(expanded.size() == parts.size() + (4 if disabled else 3), "group expansion uses the same synthesis chunks")
+	check(expanded.size() == parts.size() + 3, "group expansion uses the same synthesis chunks")
 	var pinkie: Array = expanded.slice(0, parts.size())
 	check(pinkie.map(func(beat: Dictionary) -> String: return beat.speech) == parts, "expanded solo continuation text matches requests")
 	check(pinkie[0].actions == beats[0].actions and pinkie.slice(1).all(func(beat: Dictionary) -> bool: return beat.actions.is_empty()), "actions occur once on the first clip")
@@ -77,4 +76,6 @@ func run(disabled: bool) -> int:
 	check(paging_matches, "display paging unchanged at every reveal position")
 	check(helper.timed_words(short, 2.5) == original.timed_words(short, 2.5), "word timing stays on the original helper")
 	check(helper.complete_part("A complete sentence. An unfinished") == original.complete_part("A complete sentence. An unfinished"), "output-limit trimming unchanged")
+	helper.note_stream_client(-1, false)
+	check(helper.audio_parts(short) == ["Oh!", "A cape!", "That sounds wonderful!"], "stock splitting without streaming")
 	return failures

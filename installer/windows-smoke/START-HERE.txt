@@ -14,7 +14,7 @@ The current candidate still needs this native Windows smoke test.
 4. After playing, fill in SMOKE-CHECKLIST.txt and run COLLECT-LOGS.cmd.
    Copy the test-results folder back to BreezePNY on the thumb drive.
 
-Use a separate Home: Equestria 0.3.0-maredev Windows game folder.
+Use a separate Home: Equestria 0.3.1.2-maredev Windows game folder.
 The helper selects a separate profile and updates the mod to @MOD_VERSION@.
 Your normal game saves are not used by that profile.
 

@@ -1,5 +1,7 @@
 # Build Windows binaries on Linux
 
+The current game mod 0.1.2 is portable GDScript and uses the native libraries shipped by Home: Equestria 0.3.1.2. Build it with `scripts/build.py --platform windows-x86_64`; no mod-native build is needed. The native build instructions below concern the companion runtime and historical native development.
+
 No Windows compiler installation or Windows boot is needed for this build. Native Windows hardware qualification is separate from cross-compilation and Wine checks.
 
 The first candidate uses LLVM MinGW `20261104` UCRT, LLVM 23.1.5, from the [official cross-compiler release](https://github.com/mstorsjo/llvm-mingw/releases/tag/20261104). The Linux x86_64 archive SHA-256 is `919380403de87dca3c581c2053230cd298af5e891286628ba0613b7fed370926`. Unpack it into a user-owned toolchain folder; no system package changes are needed. The release ZIP embeds official Windows CPython 3.14.10, SHA-256 `90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159`.
@@ -47,6 +49,6 @@ CMAKE_PREFIX_PATH=/path/to/installed/SPIRV-Headers
 
 Both compiler/runtime libraries are linked statically. The Windows Breeze executable imports Windows system libraries and `vulkan-1.dll`; the lip-sync DLL imports Windows system libraries. Preserve LLVM/MinGW notices with both artifacts. The portable-build patch removes absolute source paths from diagnostics and uses `$ORIGIN` for Linux shared-library lookup. It follows the unchanged LoRA patch. The optional Windows source patch adds a missing `<cstdlib>` include. Runtime bundles include these source patches.
 
-Pack the Windows DLL with `scripts/build.py --platform windows-x86_64`, using the matching Linux Godot 4.5 engine and official game packer. The packer stages each platform separately and embeds only its selected native binary. Package the Windows runtime with `scripts/package_runtime.py --platform windows-x86_64`, supplying its executable hash inventory. Finally, `scripts/package_windows.py` takes that archive, the unchanged voice pack, the Windows mod pack and the SHA-verified embedded Python ZIP. It emits the Windows ZIP, file inventory and `WINDOWS-SHA256SUMS`.
+Build the Windows-named routing pack with `scripts/build.py --platform windows-x86_64`, using the matching game source and Linux Godot 4.5 release engine. The routing pack contains no native DLL. Package the Windows runtime with `scripts/package_runtime.py --platform windows-x86_64`, supplying its executable hash inventory. Finally, `scripts/package_windows.py` takes that archive, the unchanged voice pack, the Windows mod pack and the SHA-verified embedded Python ZIP. It emits the Windows ZIP, file inventory and `WINDOWS-SHA256SUMS`.
 
 Before publishing, run `breeze-test-lora.exe`, `breeze-test-depth.exe`, all companion tests with Windows Python, the installed server with real synthesis, and Windows Godot mod/transport checks. See [WINDOWS.md](WINDOWS.md) for native flatscreen coverage and the untested Windows PCVR scope.

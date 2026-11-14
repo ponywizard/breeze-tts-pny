@@ -56,7 +56,7 @@ D. CONNECT THE LLM AND STT LAB
    Press a key to close that check window. Keep the tunnel window open.
 
 E. PREPARE THE SEPARATE GAME FOLDER
-1. Use the separate extracted Home: Equestria 0.3.0-maredev Windows game
+1. Use the separate extracted Home: Equestria 0.3.1.2-maredev Windows game
    folder from the previous playtest, or extract a fresh Windows release
    into a NEW folder. Keep your regular game installation separate.
 2. Open that game folder. It should contain HomeEquestria.exe,

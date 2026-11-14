@@ -1,17 +1,44 @@
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'installer'))
+import prepare_windows_playtest as playtest
 from prepare_windows_playtest import install_mod_pack, PROFILE
 from collect_windows_playtest import collect
 
 
 class WindowsPlaytestChecks(unittest.TestCase):
+    def test_setup_accepts_current_patch_and_rejects_older_game(self):
+        for version in ('0.3.1.2-maredev', '0.3.1-maredev'):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder); game = root / 'game'; game.mkdir()
+                for name in ('HomeEquestria.exe', 'HomeEquestria.pck', 'HomeEquestria-data.pck'):
+                    (game / name).write_bytes(b'fixture')
+                pack = root / 'game-mod/breeze_tts_pny-0.1.2-windows-x86_64.pck'
+                pack.parent.mkdir(); pack.write_bytes(b'mod')
+                appdata = root / 'appdata'; user = appdata / PROFILE
+                receipt = {'user_path': str(user), 'version': version}
+                result = type('Result', (), {'returncode': 0, 'stderr': '',
+                              'stdout': 'BREEZE_PROFILE ' + json.dumps(receipt) + '\n'})()
+                with patch.object(playtest, 'ROOT', root), patch.object(playtest, 'platform_id', return_value='windows-x86_64'), \
+                     patch.object(playtest.subprocess, 'run', return_value=result), patch.dict(os.environ, {'APPDATA': str(appdata)}):
+                    if version == '0.3.1.2-maredev':
+                        playtest.prepare(game)
+                        self.assertEqual((user / 'mods' / pack.name).read_bytes(), b'mod')
+                        self.assertEqual(json.loads((user / 'ai_config.json').read_text())['tts']['voice_mode'], 'auto')
+                    else:
+                        with self.assertRaisesRegex(ValueError, 'verification failed'):
+                            playtest.prepare(game)
+                        self.assertFalse((game / 'override.cfg').exists())
+                        self.assertFalse((user / 'mods').exists())
+
     def test_update_keeps_one_active_pack_and_preserves_other_mods(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder); mods = root / 'profile/mods'; mods.mkdir(parents=True)

@@ -1,17 +1,12 @@
 {
   "id": "breeze_tts_pny",
   "name": "Breeze TTS PNY",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "nak",
-  "description": "Incremental Breeze speech and Talking Avatar lip-sync. Linux x86_64 preview for Home Equestria 0.3.0. Requires a compatible Breeze character router. Talking Avatar by InterviewFlowAI (MIT).",
-  "game_version": "0.3.0-maredev",
-  "entry": "res://mods/breeze_tts_pny/main.gd",
-  "script_extensions": [
-    "res://mods/breeze_tts_pny/ext/speech_sentences.gd",
-    "res://mods/breeze_tts_pny/ext/tts_client.gd",
-    "res://mods/breeze_tts_pny/ext/openpony.gd",
-    "res://mods/breeze_tts_pny/ext/hybrid.gd",
-    "res://mods/breeze_tts_pny/ext/spike.gd",
-    "res://mods/breeze_tts_pny/ext/director.gd"
+  "description": "Breeze character routing for Home Equestria 0.3.1.2. Uses the game’s built-in streaming and lip-sync. Requires a compatible Breeze character router.",
+  "game_version": "0.3.1.2-maredev",
+  "game_base_version": "0.3.1-maredev",
+  "extends": [
+    "res://mods/breeze_tts_pny/ext/tts_client.gd"
   ]
 }

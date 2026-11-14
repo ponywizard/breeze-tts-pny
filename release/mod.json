@@ -1,0 +1,18 @@
+{
+  "version": "0.1.2",
+  "tag": "mod-v0.1.2",
+  "name": "Breeze game mod 0.1.2 — Home: Equestria 0.3.1.2",
+  "game_version": "0.3.1.2-maredev",
+  "pack_sha256": "beb6f081409b1551c40102b9db75a77c8ac0c427c0c80ddad8c4198e9a4d2b9c",
+  "upstream": {
+    "repository": "ponywizard/home-equestria",
+    "tag": "0.3.1.2-maredev",
+    "commit": "8919fff029f747797c87d62d496a18cf8996c069"
+  },
+  "engine": {
+    "url": "https://github.com/godotengine/godot-builds/releases/download/4.5-stable/Godot_v4.5-stable_linux.x86_64.zip",
+    "sha256": "c7316e1fd782ad276a4d985a7673b5976eaaa8d90561a2bea5289210dc53e9ba",
+    "filename": "Godot_v4.5-stable_linux.x86_64"
+  },
+  "notes": "Game-mod update for **Home: Equestria 0.3.1.2-maredev** (Godot 4.5). Companion **0.2.1**, the curated voice pack and adapters are unchanged.\n\n### Fixed\n\n- Breeze now voices all stock Ponese profiles, including Dinky Doo and Silver Spoon, using each pony's character ID.\n- Character routing works over ordinary WAV requests before streaming detection succeeds, as well as streamed requests. Shared numbered-speaker defaults no longer select the wrong voice.\n- Global Ponese, disabled TTS and fallback after failed synthesis remain respected.\n\n### Current-game compatibility\n\nThe game already includes streaming, playback and Talking Avatar lip-sync. This update uses those built-in implementations and the standard mod extension loader. The old 0.3.0 playback backports and native runtime have been retired from the mod pack.\n\n### Install or upgrade\n\n1. Update Home: Equestria to **0.3.1.2-maredev**.\n2. Download the `.pck` for your platform below.\n3. Open **Settings → Mods → Open mods folder**, remove the older Breeze `.pck`, copy in 0.1.2, then restart the game. Keep one Breeze pack installed.\n4. Keep using the existing companion and MOSS-compatible URL, normally `http://127.0.0.1:18792/tts`.\n\nBoth platform packs contain identical portable GDScript. If you are new to Breeze, first install the companion and voice archive from [companion release 0.2.1](https://github.com/ponywizard/breeze-tts-pny/releases/tag/v0.2.1), then replace its older game mod with this update. The optional isolated-playtest helper in that older Windows ZIP still targets game 0.3.0; normal mod installation through the game works without that helper.\n\n### Validation and Windows playtesting\n\nThe official Linux 0.3.1.2 release, cumulative patch and stock bundled mods passed automated checks: enabled/disabled loading, later preloads, all **23** forced-Ponese profiles over WAV and PCM, global settings, error fallback, transport/cancellation/recovery, the real Spike speech handoff, native lip-sync inference and unchanged eye fields.\n\n**This update has not been playtested on Windows. Windows users are the playtesters for this release**, in flatscreen and PCVR. Please include game/mod/companion versions, GPU/driver, display mode and matching game/companion logs with reports.\n\n`SHA256SUMS`, build receipts and `release-manifest.json` identify the published artifacts. No companion or voice-pack reinstall is required for existing users.\n"
+}

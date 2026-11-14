@@ -32,7 +32,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header('Content-Length', str(len(raw)))
                 self.end_headers(); self.wfile.write(raw)
                 return
-        elif self.path == '/health':
+        elif self.path in {'/health', '/profiles/health'}:
             data.update(pcm_stream='framed-v1', native_backend='breeze')
         elif self.path == '/prebuffer/health':
             data.update(pcm_stream='framed-v1', native_backend='breeze', prebuffer_ms=1000)
@@ -47,14 +47,18 @@ class Handler(BaseHTTPRequestHandler):
         self.server.requests.append({'path': self.path, 'character_id': body.get('character_id')})
         identity = body.get('character_id')
         try:
-            if self.path == '/legacy/tts' or identity == 'wav_fixture':
+            if self.path == '/profiles-error/tts':
+                self.send_error(503)
+                return
+            if self.path in {'/legacy/tts', '/profiles-wav/tts'} or identity == 'wav_fixture':
                 self.send_response(200)
                 self.send_header('Content-Type', 'audio/wav')
                 self.send_header('Content-Length', str(len(WAV)))
                 self.end_headers()
                 self.wfile.write(WAV)
                 return
-            if self.path not in {'/tts/stream', '/warming/tts/stream', '/prebuffer/tts/stream'} or identity not in {'stream_fixture', 'corrupt_fixture', 'cancel_fixture', 'spike', 'lily_valley'}:
+            profile_stream = self.path == '/profiles/tts/stream' and isinstance(identity, str) and bool(identity)
+            if not profile_stream and (self.path not in {'/tts/stream', '/warming/tts/stream', '/prebuffer/tts/stream'} or identity not in {'stream_fixture', 'corrupt_fixture', 'cancel_fixture', 'spike', 'lily_valley'}):
                 self.send_error(400)
                 return
             frames = [struct.pack('<I', len(PCM[i:i+3840])) + PCM[i:i+3840] for i in range(0, len(PCM), 3840)]

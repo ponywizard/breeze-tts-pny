@@ -36,7 +36,7 @@ On Linux, after installing the release:
 python3 scripts/check_server.py \
   --launcher /path/to/installation/bin/breeze-pny \
   --output build/server-check-new \
-  --game /path/to/clean/HomeEquestria-0.3.0-maredev-linux
+  --game /path/to/clean/HomeEquestria-0.3.1.2-maredev-linux
 ```
 
 The output directory must be new. The check uses separate loopback test ports, owns its service and stops it afterward. Use `--port` and `--native-port` if its defaults are occupied. It does not change another running companion.

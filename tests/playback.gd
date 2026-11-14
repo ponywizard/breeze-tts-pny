@@ -2,8 +2,8 @@ extends Node
 class Head extends "res://world/characters/openpony/openpony_mare.gd":
 	func _ready() -> void: set_process(false)
 	func _process(delta: float) -> void: _unprofiled_process(delta)
-const UTTERANCE = preload("res://mods/breeze_tts_pny/runtime/pcm_utterance.gd")
-const TRACK = preload("res://mods/breeze_tts_pny/runtime/talking_avatar_track.gd")
+const UTTERANCE = preload("res://world/ai/pcm_utterance.gd")
+const TRACK = preload("res://world/characters/lip_sync_native.gd")
 var head: Node3D
 var voice: AudioStreamPlayer3D
 var mouth: Object
@@ -36,7 +36,7 @@ func _ready() -> void:
 		head=load("res://world/characters/spike/spike.gd").new();world.add_child(head)
 		head.set_physics_process(false)
 		voice=head._voice;mouth=head.expressions
-		check(head.supports_pcm_speech() and mouth.has_shapes() and head.tree.active,"actual Spike body, face and speech extension ready")
+		check(head.supports_pcm_speech() and mouth.has_shapes() and head.tree.active,"actual game-provided Spike body, face and speech ready")
 	else:
 		head=Head.new();world.add_child(head)
 		voice=AudioStreamPlayer3D.new();head.add_child(voice);head.voice=voice
@@ -58,7 +58,7 @@ func _process(_delta: float) -> void:
 		if spike:
 			var jaw: int=mouth.mesh.find_blend_shape_by_name("jaw_open")
 			if jaw>=0 and mouth.mesh.get_blend_shape_value(jaw)>.1:jaw_moved=true
-		if head._ta_clock != null:
+		if is_instance_valid(head._pcm_player):
 			check(head._speech_time+0.001>=last_time,"audible clock moved backwards "+phase+" "+str(last_time)+" -> "+str(head._speech_time))
 		last_time=head._speech_time
 func viseme() -> String:
@@ -78,7 +78,7 @@ func wait_end(timeout_ms:=6000) -> void:
 		check(Time.get_ticks_msec()<until,"playback timeout")
 		await get_tree().process_frame
 func run() -> void:
-	check(TRACK.prepare(),"prepare analyzer")
+	check(TRACK.available(),"prepare analyzer")
 	await get_tree().create_timer(.1).timeout
 	# Identical audio and arrival schedule, enabled vs disabled. No TTS/network calls.
 	for enabled: bool in [true]:
@@ -105,9 +105,9 @@ func run() -> void:
 	source.pcm.append_array(pcm.slice(11520,48000));source.done=true
 	expected=ended+1;await wait_end();check(ended==expected,"rebuffer recovery")
 	source=setup();source.pcm=pcm;await head.speech_started
-	var old_track: RefCounted=head._ta_track
+	var old_track: RefCounted=head._pcm_player._track
 	expected=ended;head.stop_speaking();await get_tree().create_timer(.1).timeout
-	check(source.cancelled and not voice.playing and ended==expected and viseme()=="X" and not old_track.active,"cancellation ownership")
+	check(source.cancelled and not voice.playing and ended==expected and viseme()=="X" and (old_track == null or old_track._analyzer == null),"cancellation ownership")
 	source=setup();source.pcm=pcm;await head.speech_started
 	source.error="corrupt receipt";await wait_end()
 	check(errors==1 and ended==expected,"partial corruption is failure, not completion")
@@ -120,7 +120,7 @@ func run() -> void:
 	await wait_end()
 	# A failed analyzer must leave audio independent and neutral.
 	source=setup();source.pcm=pcm.slice(0,24000);source.done=true
-	head._ta_track.cancel();expected=ended+1;await wait_end()
+	head._pcm_player._track.cancel();expected=ended+1;await wait_end()
 	check(ended==expected and first_sound>=0 and seen.keys()==["X"],"audio survives analyzer failure")
 	# Buffered WAV/prefetch path should use the same model without a full-analysis gate.
 	for file: String in ["voice24.wav","voice48.wav"]:
@@ -130,14 +130,14 @@ func run() -> void:
 		check(ended==expected and seen.size()>2 and first_sound>=0,"buffered WAV mouth motion "+file+" "+str(seen))
 	# Cancelling before the first chunk must also release the producer/worker.
 	source=setup();expected=ended
-	old_track=head._ta_track;head.stop_speaking()
-	check(source.cancelled and ended==expected and not old_track.active,"cancel before audio starts")
+	old_track=head._pcm_player._track;head.stop_speaking()
+	check(source.cancelled and ended==expected and (old_track == null or old_track._analyzer == null),"cancel before audio starts")
 	if spike:
 		# Scene teardown must cancel an active stream without reporting success.
 		source=setup();source.pcm=pcm;await head.speech_started
-		old_track=head._ta_track;expected=ended
+		old_track=head._pcm_player._track;expected=ended
 		head.queue_free();await get_tree().process_frame;await get_tree().process_frame
-		check(source.cancelled and not old_track.active and ended==expected,"Spike scene exit cancels speech and analyzer")
+		check(source.cancelled and (old_track == null or old_track._analyzer == null) and ended==expected,"Spike scene exit cancels speech and analyzer")
 	else:
 		head.stop_speaking();mouth.free();head.mouth=null
 	var f:=FileAccess.open(work+"/playback-results.json",FileAccess.WRITE);f.store_string(JSON.stringify(results,"\t"));f.close()

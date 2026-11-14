@@ -31,7 +31,7 @@ func run() -> void:
 	var port := OS.get_cmdline_user_args()[0]
 	var endpoint := "http://127.0.0.1:" + port
 	root.get_node("Settings").set_value("voice/tts", true)
-	utterances = load("res://mods/breeze_tts_pny/runtime/pcm_utterance.gd")
+	utterances = load("res://world/ai/pcm_utterance.gd")
 	client = load("res://world/ai/tts_client.gd").new(); root.add_child(client)
 	client.configure({"provider":"moss", "url":endpoint + "/tts", "voice_mode":"tts", "chatter_fallback":false})
 	var deadline := Time.get_ticks_msec() + 5000

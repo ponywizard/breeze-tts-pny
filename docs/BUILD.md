@@ -1,44 +1,29 @@
-# Building the Linux preview
+# Building the current game mod
 
-Use Python 3.11+, a C++17 compiler, CMake 3.20+, Ninja, nlohmann-json development headers, and Git. The pack targets Home: Equestria `0.3.0-maredev` and Godot 4.5. The original 0.3.0 release uses Godot 4.5; some earlier integration fixtures used 4.5.2.
+Game mod **0.1.2** targets Home: Equestria **0.3.1.2-maredev**, Godot **4.5**, on Linux and Windows x86_64. Use Python 3.11+, source from the matching upstream tag and the official release engine. The source project's base version remains `0.3.1-maredev`; the cumulative update supplies the `.2` build version.
 
-The matching game source supplies `project.godot`, `tools/modding/build_mod.gd`, `tools/build/packs.gd`, and `world/modding/mod_loader.gd`. Source data is needed for testing a source checkout; packaged tests below use the installed release's existing game/data packs instead.
-
-## Native library
-
-```bash
-git clone https://github.com/godotengine/godot-cpp.git vendor/godot-cpp
-git -C vendor/godot-cpp checkout e83fd0904c13356ed1d4c3d09f8bb9132bdc6b77
-python3 scripts/build_native.py --godot-cpp vendor/godot-cpp
-```
-
-The build script rejects a different bindings revision. The supplied model is already in `mods/breeze_tts_pny/native/`; no model download or Python inference environment is needed. Output: `build/native/bin/libtalking_avatar.so`.
-
-The supplied Linux binary was built with no host-specific `-march=native` setting. Godot's bindings link the C++ runtime statically. Diagnostic source paths are remapped to repository-relative labels. Its remaining system dependencies require glibc 2.38 or newer, as determined from ELF version requirements. Building on an older glibc baseline is a future portability step, followed by validation on that baseline. This preview does not support musl Linux.
-
-## Pack
+The game now provides streaming, playback and native lip-sync. Building this routing-only mod needs no C++ compiler, extra native library, model download or Python inference packages. The earlier native sources remain in Git history/development tooling; they are not inputs to this mod pack.
 
 ```bash
 python3 scripts/build.py \
-  --game-source /path/to/matching/game-source \
-  --engine /path/to/matching/game/HomeEquestria.x86_64 \
-  --native-library build/native/bin/libtalking_avatar.so
+  --game-source /path/to/home-equestria-at-0.3.1.2-maredev \
+  --engine /path/to/HomeEquestria-0.3.1.2-maredev-linux/HomeEquestria.x86_64
 ```
 
-The script checks game/engine versions, stages a minimal project under `build/pack/`, and calls the unmodified official mod builder. It copies the engine into an isolated directory so adjacent game or development packs cannot change the build. The selected native library is embedded as raw bytes; the runtime extracts and loads it on first use. None of these steps changes the supplied game/source tree or the player's mods folder.
+Add `--platform windows-x86_64` to produce the Windows-named pack. Both packs contain the same portable GDScript; native game libraries come from the installed game. The builder uses the matching official mod packer and includes only the routing extension, manifest and notices. It does not change the game/source tree or a player's mods folder.
 
-The output filename follows the version in `mods/breeze_tts_pny/mod.json`, currently `dist/breeze_tts_pny-0.1.1-linux-x86_64.pck`. Keep `dist/SHA256SUMS` and the `.build.json` receipt with release artifacts. The receipt records packed source hashes, binary hash, model hash and official builder hash; it does not include private configuration or absolute build paths. Builds are not claimed to be byte-for-byte reproducible across compilers or engine versions.
+Outputs are `dist/breeze_tts_pny-0.1.2-linux-x86_64.pck` and `dist/breeze_tts_pny-0.1.2-windows-x86_64.pck`. Keep `dist/SHA256SUMS` and the `.build.json` receipts with them. Receipts record the effective target, base version, packed source hashes and official builder hash.
 
 ## Checks
 
 ```bash
-python3 scripts/verify.py --game-release /path/to/matching/game
+python3 scripts/verify.py --game-release /path/to/HomeEquestria-0.3.1.2-maredev-linux
 python3 scripts/world_check.py
 python3 scripts/audio_check.py --speech-pcm /path/to/local/speech.s16
 python3 scripts/audio_check.py --actor spike --speech-pcm /path/to/local/speech.s16
 ```
 
-Run `verify.py` first. It prepares a clean isolated release under `build/verify/game`, allowing only the game executable, its two main packs and native `.so` dependencies. Test game processes run from that directory, avoiding loose source files in the caller's working directory. They use separate `XDG_DATA_HOME` folders; personal saves and settings are not read or changed. The transport fixture binds only loopback and uses no external TTS service.
+Run `verify.py` first. It prepares a clean isolated release under `build/verify/game` using the game executable, two main packs, cumulative update, stock bundled mods and native `.so` dependencies. It verifies the effective game version, standard extension loading, all stock forced-Ponese profiles on WAV and PCM, global voice settings and original game lip-sync. Test game processes run from that directory, avoiding loose source files in the caller's working directory. They use separate `XDG_DATA_HOME` folders; personal saves and settings are not read or changed. The transport fixture binds only loopback and uses no external TTS service.
 
 `world_check.py` creates and reloads a disposable world, verifies saved state and the real director's extended TTS client, and rejects a fallback to a fresh game.
 
@@ -74,3 +59,15 @@ python3 scripts/audit_release.py dist/*.pck dist/*.tar.gz dist/*.zip \
 This scans bytes and nested archives for personal source paths, temporary build paths, credential patterns and private LAN addresses, and rejects nonportable ELF64 library search paths. Additional private strings can be supplied with `--forbid`. Reports omit matched credential values. The pinned compiler runtime's public upstream CI assertion paths are explicitly recognized. Known path/network constants in the SHA-verified CPython runtime are recognized by exact file hash; modified files lose that exemption. Project/workstation paths are not allowed. This is a heuristic audit, alongside the file/hash receipts and source review.
 
 The native build recipes remap first-party/compiler-binding source labels. Linux runtime libraries resolve beside the executable with `$ORIGIN`; they do not fall back to a private build tree. Re-run native and installed-service checks after rebuilding.
+
+## Publishing the mod update
+
+`release/mod.json` records the tag, release notes, tested pack hash, pinned game SDK commit and pinned Godot download. A change to that file on `main` runs `.github/workflows/publish-mod.yml`; the workflow can also be started manually from GitHub Actions.
+
+The workflow builds both platform packs from public pinned inputs, requires an exact match to the locally validated pack hash, audits the six release assets and publishes through the repository's scoped `GITHUB_TOKEN`. It creates a draft, uploads and verifies asset digests, then publishes it. Existing published artifacts are never replaced. This workflow publishes only the game mod; companion and voice archives retain their existing release.
+
+A local preparation check, without publishing, is:
+
+```bash
+python3 scripts/release_mod.py prepare
+```

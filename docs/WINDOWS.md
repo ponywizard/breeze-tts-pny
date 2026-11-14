@@ -1,12 +1,12 @@
 # Windows installation
 
-This package targets Windows 10/11 x86_64 and Home: Equestria `0.3.0-maredev` with Godot 4.5. You need an AVX2-capable CPU and a working Vulkan GPU driver. Python and the native runtime are included; no compiler, pip or separate Python installation is needed.
+This package targets Windows 10/11 x86_64 and Home: Equestria `0.3.1.2-maredev` with Godot 4.5. You need an AVX2-capable CPU and a working Vulkan GPU driver. Python and the native runtime are included; no compiler, pip or separate Python installation is needed.
 
-Native Windows flatscreen playtesting passed on an RX 6700 XT. Windows PCVR has not been personally playtested and is shipping with that limitation; issues will be investigated case by case. Other GPUs and driver versions have less coverage. [Validation details](VALIDATION.md) are separate from these install steps.
+Game mod **0.1.2** is shipping for **Windows user playtesting**, in flatscreen and PCVR. It has not been personally playtested on Windows with game 0.3.1.2. Earlier 0.1.1 native flatscreen playtesting passed on an RX 6700 XT; that is historical coverage. [Validation details](VALIDATION.md) record the distinction.
 
 ## Install the companion
 
-1. Download `breeze-tts-pny-0.2.1-windows-x86_64.zip` and `breeze-pny-curated-voices-20261107.tar.gz` from the same release. The `.pck` game mod is already included in the ZIP. `WINDOWS-SHA256SUMS` records the expected download hashes.
+1. Download `breeze-tts-pny-0.2.1-windows-x86_64.zip` and `breeze-pny-curated-voices-20261107.tar.gz` from [companion release 0.2.1](https://github.com/ponywizard/breeze-tts-pny/releases/tag/v0.2.1). Also download `breeze_tts_pny-0.1.2-windows-x86_64.pck` from the [current mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.2); the ZIP contains an older 0.1.1 pack. `WINDOWS-SHA256SUMS` records the expected download hashes.
 2. Extract the ZIP to a user-owned folder, such as `C:\BreezePNY`. Place the voice-pack `.tar.gz` **inside that extracted folder**, alongside `setup.cmd`. Leave the voice pack compressed. Keep the folder in its intended location before setup.
 3. Run `setup.cmd`. The companion installs in the folder's `companion` subdirectory. Setup copies the voices and adapters, downloads the pinned Q8 model (about 3.6 GB), and verifies the files. Allow at least 6 GB of free space and keep the setup window open until it finishes. Progress and checksum verification are shown in the terminal.
 4. Run `start-companion.cmd`. Wait for the `ready` event. Leave this window open while playing; Ctrl+C stops the companion and its owned native process.
@@ -22,7 +22,7 @@ The file must match the release's pinned SHA-256. A previously verified installe
 ## Install and configure the game mod
 
 1. Start the supported game and open **Settings → Mods → Open mods folder**.
-2. Copy `game-mod\breeze_tts_pny-0.1.1-windows-x86_64.pck` from the extracted ZIP into that folder. Keep one copy of Breeze TTS PNY and remove previous development PCM/playback/optimization packs. Restart the game.
+2. Copy `breeze_tts_pny-0.1.2-windows-x86_64.pck` from the current mod release into that folder. Keep one copy of Breeze TTS PNY and remove previous development PCM/playback/optimization packs. Restart the game.
 3. Select the MOSS-compatible TTS provider, enable TTS and automatic voices, and set its URL to `http://127.0.0.1:18792/tts`.
 4. Start the companion before loading a world, then check a conversation. Configure in flatscreen first if that is easier before using PCVR.
 
@@ -43,9 +43,11 @@ Listen to the WAV files. The first command should report adapter `pinkie`, and t
 
 To browse references or replace a character's voice, stop the companion and run `voice-library.cmd`. The [voice library](VOICE_LIBRARY.md) handles audio conversion, previews, saving, and undo in a local browser.
 
+The published companion 0.2.1 ZIP bundles the older 0.1.1 game mod and a playtest helper for game 0.3.0. For normal installation, use the 0.1.2 replacement pack through the game’s Mods folder and skip that older helper. Companion model/runtime/voice assets are unchanged.
+
 ## Optional isolated playtest
 
-Use this only when you want a disposable profile instead of your normal game saves. Extract a fresh supported Windows game release, then run:
+Use this only when you want a disposable profile instead of your normal game saves. For game 0.3.1.2, first replace `installer/prepare_windows_playtest.py` in the companion bundle with the [updated helper](https://github.com/ponywizard/breeze-tts-pny/blob/mod-v0.1.2/installer/prepare_windows_playtest.py), and replace the older `.pck` in its `game-mod` folder with 0.1.2. Then extract a fresh supported Windows game release and run:
 
 ```powershell
 .\prepare-playtest.cmd "C:\path\to\fresh\game"

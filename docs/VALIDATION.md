@@ -1,6 +1,8 @@
 # Validation and support scope
 
-This release targets Home: Equestria **0.3.0-maredev**, Godot **4.5**, with game mod **0.1.1** and companion **0.2.1**. Native manual coverage used an AMD Radeon RX 6700 XT. The 0.1.1 game packs are the exact bytes used in the November 9 Linux and Windows tests. Companion 0.2.1 changes the package version only; its server implementation and native assets match companion 0.2.0 used in those tests.
+The current **game mod 0.1.2 release** targets **Home: Equestria 0.3.1.2-maredev**, Godot **4.5**. It uses the game’s standard extension loader, PCM transport, playback and native lip-sync. On November 14 it passed the official Linux release checks with the cumulative update mounted: enabled/disabled routing extension loading and later preloads, unchanged eye fields, native analyzer inference, transport/recovery/cancellation, real Spike director handoff, and all **23 stock forced-Ponese profiles** over WAV and PCM. Global Ponese, disabled TTS, error fallback and stock selection for other providers also passed. All 23 IDs resolve in the unchanged curated pack.
+
+The Windows pack uses the same portable routing script and no mod-native DLL. This update is shipping for Windows user playtesting in flatscreen and PCVR; no new native Windows listening or VR qualification is claimed. The manual observations and measurements below describe the earlier **0.1.1 / game 0.3.0** release, whose companion 0.2.1 and voice assets remain compatible.
 
 | Configuration | Coverage |
 | --- | --- |
