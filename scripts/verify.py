@@ -112,10 +112,37 @@ def main():
                                + [{'path': '/profiles-error/tts', 'character_id': identities[0]}]):
             raise RuntimeError('Unexpected TTS requests during profile routing checks: '+str(server.requests))
         print(f'PASS: all {len(identities)} forced-Ponese profiles route by identity over WAV and PCM; global settings, error fallback and other providers preserved')
+        director_routing = {}
+        for watch_party in (False, True):
+            mode = 'watch-party' if watch_party else 'stock'
+            server.requests.clear()
+            user = work/('director-'+mode+'-'+str(time.time_ns()))
+            mods = user/'home-equestria-public/mods'; mods.mkdir(parents=True)
+            shutil.copy2(pack, mods/pack.name)
+            setting = 'bundled_on' if watch_party else 'bundled_off'
+            (mods/'mods.cfg').write_text(f'[mods]\n{setting}=PackedStringArray("watch_party", "watch_party_patch")\n')
+            result = subprocess.run([str(release/'HomeEquestria.x86_64'), '--headless', '--audio-driver', 'Dummy',
+                '--xr-mode', 'off', '--script', str(ROOT/'tests/director_routing.gd'), '--', str(server.server_port)],
+                cwd=release, env={**env, 'XDG_DATA_HOME': str(user)}, capture_output=True, text=True, timeout=60)
+            log = result.stdout+result.stderr
+            (work/f'director-{mode}.log').write_text(log)
+            if result.returncode or 'SCRIPT ERROR' in log or 'BREEZE_DIRECTOR_ROUTING_DONE failures=0' not in log:
+                raise RuntimeError(log)
+            if f'BREEZE_DIRECTOR_WATCH_PARTY {json.dumps(watch_party)}' not in log:
+                raise RuntimeError('Director compatibility check used the wrong mod state: '+log)
+            prefix = 'BREEZE_DIRECTOR_PROFILES '
+            routed = json.loads(next(line.removeprefix(prefix) for line in log.splitlines() if line.startswith(prefix)))
+            expected = [{'path': path, 'character_id': identity}
+                        for path in ('/profiles-wav/tts', '/profiles/tts/stream') for identity in identities]
+            if routed != identities or server.requests != expected:
+                raise RuntimeError('Real director identity routing mismatch: '+str(server.requests))
+            director_routing[mode] = len(routed)
+            print(f'PASS: real director _ready and {len(routed)} profiles over WAV/PCM ({mode}); configured client and earlier hooks preserved')
     finally:
         server.shutdown(); server.server_close(); thread.join()
     (work/'result.json').write_text(json.dumps({'enabled': True, 'disabled': True,
-        'transport': True, 'profile_routing': len(identities), 'standard_extensions': True, 'game_version': GAME_VERSION,
+        'transport': True, 'profile_routing': len(identities), 'director_routing': director_routing,
+        'standard_extensions': True, 'game_version': GAME_VERSION,
         'eye_fields_match': len(eyes[0]), 'game_release': str(source)}, indent=2)+'\n')
     print(f'PASS: all {len(eyes[0])} eye mesh/shader fields match the unmodified game')
 

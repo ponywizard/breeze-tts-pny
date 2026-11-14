@@ -1,6 +1,6 @@
 # Building the current game mod
 
-Game mod **0.1.2** targets Home: Equestria **0.3.1.2-maredev**, Godot **4.5**, on Linux and Windows x86_64. Use Python 3.11+, source from the matching upstream tag and the official release engine. The source project's base version remains `0.3.1-maredev`; the cumulative update supplies the `.2` build version.
+Game mod **0.1.3** targets Home: Equestria **0.3.1.2-maredev**, Godot **4.5**, on Linux and Windows x86_64. Use Python 3.11+, source from the matching upstream tag and the official release engine. The source project's base version remains `0.3.1-maredev`; the cumulative update supplies the `.2` build version.
 
 The game now provides streaming, playback and native lip-sync. Building this routing-only mod needs no C++ compiler, extra native library, model download or Python inference packages. The earlier native sources remain in Git history/development tooling; they are not inputs to this mod pack.
 
@@ -10,9 +10,9 @@ python3 scripts/build.py \
   --engine /path/to/HomeEquestria-0.3.1.2-maredev-linux/HomeEquestria.x86_64
 ```
 
-Add `--platform windows-x86_64` to produce the Windows-named pack. Both packs contain the same portable GDScript; native game libraries come from the installed game. The builder uses the matching official mod packer and includes only the routing extension, manifest and notices. It does not change the game/source tree or a player's mods folder.
+Add `--platform windows-x86_64` to produce the Windows-named pack. Both packs contain the same portable GDScript; native game libraries come from the installed game. The builder uses the matching official mod packer and includes only the routing extension, client-selection entry hook, manifest and notices. It does not change the game/source tree or a player's mods folder.
 
-Outputs are `dist/breeze_tts_pny-0.1.2-linux-x86_64.pck` and `dist/breeze_tts_pny-0.1.2-windows-x86_64.pck`. Keep `dist/SHA256SUMS` and the `.build.json` receipts with them. Receipts record the effective target, base version, packed source hashes and official builder hash.
+Outputs are `dist/breeze_tts_pny-0.1.3-linux-x86_64.pck` and `dist/breeze_tts_pny-0.1.3-windows-x86_64.pck`. Keep `dist/SHA256SUMS` and the `.build.json` receipts with them. Receipts record the effective target, base version, packed source hashes and official builder hash.
 
 ## Checks
 
@@ -23,7 +23,7 @@ python3 scripts/audio_check.py --speech-pcm /path/to/local/speech.s16
 python3 scripts/audio_check.py --actor spike --speech-pcm /path/to/local/speech.s16
 ```
 
-Run `verify.py` first. It prepares a clean isolated release under `build/verify/game` using the game executable, two main packs, cumulative update, stock bundled mods and native `.so` dependencies. It verifies the effective game version, standard extension loading, all stock forced-Ponese profiles on WAV and PCM, global voice settings and original game lip-sync. Test game processes run from that directory, avoiding loose source files in the caller's working directory. They use separate `XDG_DATA_HOME` folders; personal saves and settings are not read or changed. The transport fixture binds only loopback and uses no external TTS service.
+Run `verify.py` first. It prepares a clean isolated release under `build/verify/game` using the game executable, two main packs, cumulative update, stock bundled mods and native `.so` dependencies. It verifies the effective game version, standard extension loading, all stock forced-Ponese profiles on WAV and PCM, global voice settings and original game lip-sync. It also starts the real conversation director with Watch Party on and off, verifies the client it actually creates, and routes every affected profile through it over WAV and PCM. Test game processes run from that directory, avoiding loose source files in the caller's working directory. They use separate `XDG_DATA_HOME` folders; personal saves and settings are not read or changed. The transport fixture binds only loopback and uses no external TTS service.
 
 `world_check.py` creates and reloads a disposable world, verifies saved state and the real director's extended TTS client, and rejects a fallback to a fresh game.
 

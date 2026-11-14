@@ -10,6 +10,7 @@ __pycache__/
 /mods/breeze_tts_pny/native/manifest.json
 /companion/
 /logs/
+/user_logs/
 /config.json
 /config.previous.json
 /installation.json

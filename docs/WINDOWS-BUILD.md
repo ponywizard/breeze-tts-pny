@@ -1,6 +1,6 @@
 # Build Windows binaries on Linux
 
-The current game mod 0.1.2 is portable GDScript and uses the native libraries shipped by Home: Equestria 0.3.1.2. Build it with `scripts/build.py --platform windows-x86_64`; no mod-native build is needed. The native build instructions below concern the companion runtime and historical native development.
+The current game mod 0.1.3 is portable GDScript and uses the native libraries shipped by Home: Equestria 0.3.1.2. Build it with `scripts/build.py --platform windows-x86_64`; no mod-native build is needed. The native build instructions below concern the companion runtime and historical native development.
 
 No Windows compiler installation or Windows boot is needed for this build. Native Windows hardware qualification is separate from cross-compilation and Wine checks.
 

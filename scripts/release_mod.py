@@ -111,7 +111,8 @@ def prepare(metadata):
                'game_version': metadata['game_version'], 'source_commit': source_commit(),
                'upstream': upstream, 'files': rows,
                'validation': {'linux_official_release': True, 'forced_ponese_profiles': 23,
-                              'wav_and_pcm': True, 'windows_playtested': False}}
+                              'wav_and_pcm': True, 'real_director_stock_and_watch_party': True,
+                              'windows_playtested': False}}
     (folder / 'release-manifest.json').write_text(json.dumps(receipt, indent=2) + '\n')
     (folder / 'SHA256SUMS').write_text(''.join(f'{sha(path)}  {path.name}\n'
         for path in assets(metadata) if path.name != 'SHA256SUMS'))

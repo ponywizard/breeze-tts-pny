@@ -1,11 +1,12 @@
 {
   "id": "breeze_tts_pny",
   "name": "Breeze TTS PNY",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "author": "nak",
   "description": "Breeze character routing for Home Equestria 0.3.1.2. Uses the game’s built-in streaming and lip-sync. Requires a compatible Breeze character router.",
   "game_version": "0.3.1.2-maredev",
   "game_base_version": "0.3.1-maredev",
+  "entry": "res://mods/breeze_tts_pny/main.gd",
   "extends": [
     "res://mods/breeze_tts_pny/ext/tts_client.gd"
   ]

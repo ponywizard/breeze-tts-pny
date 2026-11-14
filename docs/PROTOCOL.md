@@ -1,6 +1,6 @@
 # Character router interface
 
-This describes the interface used by the companion and development Breeze routers. See [SERVER.md](SERVER.md) for installation and operation. Game mod 0.1.2 targets Home: Equestria 0.3.1.2 and uses its built-in transport. The mod never launches a service or downloads TTS weights.
+This describes the interface used by the companion and development Breeze routers. See [SERVER.md](SERVER.md) for installation and operation. Game mod 0.1.3 targets Home: Equestria 0.3.1.2 and uses its built-in transport. The mod never launches a service or downloads TTS weights.
 
 The configured TTS provider is the game's MOSS-compatible provider, with an HTTP or HTTPS URL ending in `/tts`. HTTPS verifies the server certificate against the system's trusted roots; it is meant for a remote router such as the Colab notebook's `trycloudflare.com` link (see [COLAB.md](COLAB.md)). The stream client does not implement IPv6 literals or an authorization header. Use a local endpoint, a trusted LAN, or a tunnel as appropriate to the deployment. Speech text and character identity are sent to the configured router; the mod adds no telemetry endpoint.
 

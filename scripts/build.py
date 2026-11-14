@@ -58,6 +58,7 @@ def main():
     # model weights and the extension loader now come from Home: Equestria itself.
     paths = [ROOT/'mods/breeze_tts_pny/mod.json']
     paths += [ROOT/path.removeprefix('res://') for path in MANIFEST['extends']]
+    if MANIFEST.get('entry'): paths.append(ROOT/MANIFEST['entry'].removeprefix('res://'))
     paths += sorted((ROOT/'mods/breeze_tts_pny/licenses').glob('*'))
     for path in paths:
         dest = mod/path.relative_to(ROOT/'mods/breeze_tts_pny')

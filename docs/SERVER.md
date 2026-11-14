@@ -17,7 +17,7 @@ Download these matching release files:
 
 - `breeze-tts-pny-server-0.2.1-linux-x86_64.tar.gz`
 - `breeze-pny-curated-voices-20261107.tar.gz`
-- `breeze_tts_pny-0.1.2-linux-x86_64.pck` for the game
+- `breeze_tts_pny-0.1.3-linux-x86_64.pck` for the game
 
 `SERVER-SHA256SUMS` records the companion/voice archive hashes; `SHA256SUMS` records the game-pack hash. The native runtime is included in the companion archive.
 

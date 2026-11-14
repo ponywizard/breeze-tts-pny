@@ -6,14 +6,14 @@ The release has two parts: a game mod and a companion that generates speech. The
 
 ## Downloads
 
-Download **game mod 0.1.2** from the [current mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.2):
+Download **game mod 0.1.3** from the [current mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3):
 
 | Platform | Game mod |
 | --- | --- |
-| Windows | `breeze_tts_pny-0.1.2-windows-x86_64.pck` |
-| Linux | `breeze_tts_pny-0.1.2-linux-x86_64.pck` |
+| Windows | `breeze_tts_pny-0.1.3-windows-x86_64.pck` |
+| Linux | `breeze_tts_pny-0.1.3-linux-x86_64.pck` |
 
-Existing companion users only need to replace the game `.pck` and restart. This update uses the game’s built-in streaming/lip-sync and fixes stock Ponese defaults across the Breeze roster. Companion **0.2.1**, reference voices and adapters are unchanged.
+Existing companion users only need to replace the game `.pck` and restart. This update uses the game’s built-in streaming/lip-sync, fixes stock Ponese defaults across the Breeze roster and keeps the routing fix active when Watch Party preloads the conversation director. Companion **0.2.1**, reference voices and adapters are unchanged.
 
 For a new installation, also download the companion and voice archive from [companion release 0.2.1](https://github.com/ponywizard/breeze-tts-pny/releases/tag/v0.2.1):
 
@@ -22,7 +22,7 @@ For a new installation, also download the companion and voice archive from [comp
 | Windows | `breeze-tts-pny-0.2.1-windows-x86_64.zip` and `breeze-pny-curated-voices-20261107.tar.gz` |
 | Linux | `breeze-tts-pny-server-0.2.1-linux-x86_64.tar.gz` and `breeze-pny-curated-voices-20261107.tar.gz` |
 
-The Windows ZIP includes Python and the companion runtime, plus an older 0.1.1 game mod for game 0.3.0. Use the separate **0.1.2** `.pck` above for game 0.3.1.2. The Linux companion uses your installed Python 3.11+.
+The Windows ZIP includes Python and the companion runtime, plus an older 0.1.1 game mod for game 0.3.0. Use the separate **0.1.3** `.pck` above for game 0.3.1.2. The Linux companion uses your installed Python 3.11+.
 
 Optional: [Reference Management Utility and Recordings v0.1.0](https://github.com/ponywizard/breeze-tts-pny/releases/tag/reference-manager-v0.1.0) is a separate prerelease for existing companion installations. Its single ZIP includes a local browser wizard and all 139 original reference recordings. Browse and play references, trim a replacement, compare generated speech, and save or undo changes. It reuses the installed model/runtime; no FFmpeg or additional Python packages are needed. See the [voice library guide](docs/VOICE_LIBRARY.md) for setup and validation limits.
 
@@ -50,7 +50,7 @@ The November 5 PCVR captures used an earlier runtime with **one resident Rainbow
 
 1. **Set up the companion.** Extract the companion archive, then place the downloaded voice-pack archive inside its extracted folder. Leave the voice pack compressed. On Windows, run `setup.cmd`; on Linux, follow [the Linux setup commands](docs/SERVER.md#install). Setup verifies the runtime, voices, adapters and model. Windows needs no separate Python installation.
 2. **Start speech generation.** On Windows, run `start-companion.cmd`. On Linux, use the `breeze-pny serve` command printed by setup. Wait for the `ready` event and leave that terminal open while playing.
-3. **Install the game mod.** In the game, open **Settings → Mods → Open mods folder**. Copy in the downloaded 0.1.2 `.pck` for your platform. The published companion ZIP’s `game-mod` folder contains the older 0.1.1 pack. Replace the older Breeze pack so only one copy remains, then restart the game.
+3. **Install the game mod.** In the game, open **Settings → Mods → Open mods folder**. Copy in the downloaded 0.1.3 `.pck` for your platform. The published companion ZIP’s `game-mod` folder contains the older 0.1.1 pack. Replace the older Breeze pack so only one copy remains, then restart the game.
 4. **Connect TTS.** Select the game's MOSS-compatible TTS provider, enable speech and automatic voices, and set the URL to **`http://127.0.0.1:18792/tts`**. Start the companion before loading a world. Your LLM/STT settings stay separate.
 5. **Check a conversation.** Talk to a pony and check speech and mouth movement. Configure the settings in flatscreen first if that is easier before entering VR.
 
@@ -58,13 +58,13 @@ The MOSS label is the game's existing HTTP provider setting; the companion gener
 
 Detailed instructions, offline installation, updates and troubleshooting: [Windows](docs/WINDOWS.md) · [Linux](docs/SERVER.md). To run the companion on a different computer, see [network setup](docs/SERVER.md#another-machine).
 
-No suitable GPU? The experimental [Colab notebook](docs/COLAB.md) runs the same speech service on a free Colab GPU and gives an `https://` link (game mod 0.1.2 on the current game). A complete Colab session still needs validation.
+No suitable GPU? The experimental [Colab notebook](docs/COLAB.md) runs the same speech service on a free Colab GPU and gives an `https://` link (game mod 0.1.3 on the current game). A complete Colab session still needs validation.
 
 A fresh game folder uses the game's usual saves. The optional Windows `prepare-playtest.cmd` helper creates a **separate disposable playtest profile**; it is not required for normal installation. See [isolated testing](docs/WINDOWS.md#optional-isolated-playtest).
 
 ## Compatibility and support
 
-Use the supported game version and one copy of this mod. Remove earlier development PCM/playback/optimization packs before installing. Compatibility with other mods that replace speech or character scripts has not been established. Global Ponese and disabled-TTS settings still take precedence. Version 0.1.2 has automated coverage against the official Linux 0.3.1.2 build. Earlier manual observations and GPU measurements apply to 0.1.1 on game 0.3.0.
+Use the supported game version and one copy of this mod. Remove earlier development PCM/playback/optimization packs before installing. Compatibility with other mods that replace speech or character scripts has not been established. Global Ponese and disabled-TTS settings still take precedence. Version 0.1.3 has automated coverage against the official Linux 0.3.1.2 build. Earlier manual observations and GPU measurements apply to 0.1.1 on game 0.3.0.
 
 | Current update | Coverage |
 | --- | --- |
@@ -78,7 +78,7 @@ For support, include your OS, GPU/driver, game/mod/companion versions, display m
 
 ## Disable or remove
 
-Disable the mod in **Settings → Mods**, or remove its `.pck`, then restart the game. No save migration is required. Stop the companion with Ctrl+C; remove its installation folder to uninstall it. Caches from older mod versions under `user://mods/data/breeze_tts_pny/` can be removed while the game is closed; 0.1.2 uses the game’s own native libraries.
+Disable the mod in **Settings → Mods**, or remove its `.pck`, then restart the game. No save migration is required. Stop the companion with Ctrl+C; remove its installation folder to uninstall it. Caches from older mod versions under `user://mods/data/breeze_tts_pny/` can be removed while the game is closed; 0.1.3 uses the game’s own native libraries.
 
 ## Development and licenses
 
