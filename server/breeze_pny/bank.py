@@ -50,11 +50,21 @@ def load_bank(root):
             raise ValueError('Invalid cached voice file')
         if not isinstance(info.get('ref_text'), str) or not re.fullmatch('[0-9a-f]{64}', info.get('reference_sha256', '')):
             raise ValueError('Missing voice provenance')
+        reference = info.get('reference_file')
+        if reference is not None:
+            if not isinstance(reference, str) or data['files'].get(reference) != info['reference_sha256']:
+                raise ValueError('Reference recording must match the registered WAV hash')
+            relative(root, reference)
     for adapter, name in data.get('adapters', {}).items():
         if not ID.fullmatch(adapter) or name not in data['files']: raise ValueError('Invalid adapter file')
         relative(root, name)
     for speaker, identity in data.get('legacy_speakers', {}).items():
         if not speaker.isdecimal() or identity not in characters: raise ValueError('Invalid legacy speaker map')
+    overrides = data.get('custom_voices', {})
+    if not isinstance(overrides, dict): raise ValueError('Invalid personal voice mapping')
+    for character, voice in overrides.items():
+        if character not in characters or characters[character]['voice_id'] != voice:
+            raise ValueError('Personal voice mapping differs from character routing')
     data['routes'] = characters
     return data
 

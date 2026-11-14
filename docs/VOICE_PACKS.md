@@ -21,6 +21,8 @@ A Breeze character selects `voice_id` and optional `settings`: `cfg_scale`, `tem
 
 For custom voices, register a reference and exact transcript with the compatible native engine to create its `.breeze` cache, then build a manifest and inventory. `scripts/export_voice_pack.py` adapts the existing lab manifest/reference format. The native engine's [voice documentation](https://github.com/HoppouAI/Breeze-TTS-2.cpp/blob/v0.1.6/docs/voices.md) describes cache registration. Arbitrary server-side file paths or per-voice network endpoints are not supported by this pack format.
 
+For a guided local replacement, use the [voice library](VOICE_LIBRARY.md). Packs may also include `reference_file` for each voice: an inventoried WAV whose file hash equals `reference_sha256`. Export with `--include-reference-audio` to make original references playable in the library. Personal packs record selected overrides in `custom_voices`; the installer reapplies these during updates.
+
 ## Native patch and licensing
 
 The selected runtime is [Breeze-TTS-2.cpp v0.1.6](https://github.com/HoppouAI/Breeze-TTS-2.cpp/tree/v0.1.6), revision `87b43667ca5597f826441991e416a279ed7373b9`, with the included per-request LoRA patch. The model stays resident and adapters are selected per utterance; the build uses one generation slot. The published stock binary alone does not provide this patch's adapter acknowledgement contract.

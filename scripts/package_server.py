@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'server'))
 from breeze_pny import __version__
 from breeze_pny.files import sha
-from release_files import PUBLIC_DOCUMENTS, PUBLIC_INSTALLER_FILES
+from release_files import PUBLIC_DOCUMENTS, PUBLIC_INSTALLER_FILES, server_files
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--output', type=Path, default=ROOT / f'dist/breeze-tts-pny-server-{__version__}-linux-x86_64.tar.gz')
     args = parser.parse_args()
     files = {}
-    for path in sorted((ROOT / 'server').rglob('*.py')):
+    for path in server_files(ROOT):
         files[path.relative_to(ROOT).as_posix()] = path.read_bytes()
     for name in PUBLIC_INSTALLER_FILES + PUBLIC_DOCUMENTS:
         files[name] = (ROOT / name).read_bytes()

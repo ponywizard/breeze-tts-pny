@@ -23,7 +23,7 @@ def write_bundle(path, files):
 
 
 def export(manifest, references, cache, adapters, output,
-           pack_id='curated-ponies-20261107', version='1'):
+           pack_id='curated-ponies-20261107', version='1', include_reference_audio=False):
     if not ID.fullmatch(pack_id): raise ValueError('Invalid voice pack ID')
     source, refs = read_json(manifest), read_json(references)['voices']
     files, rows, voices, used = {}, [], {}, set()
@@ -42,6 +42,13 @@ def export(manifest, references, cache, adapters, output,
             files[name] = raw
             voices[voice] = {'file': name, 'ref_text': ref['transcript'], 'reference_sha256': ref['sha256'],
                              'source': {k: ref[k] for k in ('episode', 'source_url', 'annotation_url', 'processing') if k in ref}}
+            if include_reference_audio:
+                audio = Path(ref['audio'])
+                if not audio.is_absolute(): audio = references.parent / audio
+                if sha(audio) != ref['sha256']: raise ValueError('Reference WAV differs from cached voice: ' + voice)
+                name = f'references/{voice}.wav'
+                files[name] = audio.read_bytes()
+                voices[voice]['reference_file'] = name
         else: raise ValueError('Unsupported curated route')
         rows.append(row)
     adapter_files = {}
@@ -74,6 +81,7 @@ if __name__ == '__main__':
     parser.add_argument('--adapter', action='append', default=[], metavar='ID=FILE')
     parser.add_argument('--id', default='curated-ponies-20261107', help='Portable voice pack identity')
     parser.add_argument('--version', default='1', help='Voice pack version')
+    parser.add_argument('--include-reference-audio', action='store_true', help='Include verified original WAVs for voice-library playback')
     args = parser.parse_args()
     adapters = {key: Path(value) for key, value in (a.split('=', 1) for a in args.adapter)}
-    export(args.manifest, args.references, args.cache, adapters, args.output, args.id, args.version)
+    export(args.manifest, args.references, args.cache, adapters, args.output, args.id, args.version, args.include_reference_audio)

@@ -63,6 +63,13 @@ def main():
         sub = commands.add_parser(name); sub.add_argument('--config', type=Path, default=os.environ.get('BREEZE_PNY_CONFIG'))
         if name == 'serve':
             sub.add_argument('--host'); sub.add_argument('--port', type=int); sub.add_argument('--native-port', type=int)
+    sub = commands.add_parser('voice-library', help='Open the local reference browser and replacement wizard')
+    from . import REFERENCE_MANAGER_VERSION
+    sub.add_argument('--version', action='version', version='Reference Management Utility ' + REFERENCE_MANAGER_VERSION)
+    sub.add_argument('--config', type=Path, default=os.environ.get('BREEZE_PNY_CONFIG'))
+    sub.add_argument('--port', type=int, default=0, help='Local browser port (default: choose an available port)')
+    sub.add_argument('--reference-directory', type=Path, help='Optional original <voice_id>.wav recordings; hashes must match the pack')
+    sub.add_argument('--no-browser', action='store_true', help='Print the local link without opening a browser')
     sub = commands.add_parser('smoke')
     sub.add_argument('--url', default='http://127.0.0.1:18792')
     sub.add_argument('--character', default='twilight_sparkle'); sub.add_argument('--output', type=Path)
@@ -70,6 +77,9 @@ def main():
     if args.action != 'smoke' and args.config is None: parser.error('Supply --config or use the installed launcher')
     try:
         if args.action == 'serve': serve(args.config, args.host, args.port, args.native_port)
+        elif args.action == 'voice-library':
+            from .voice_library import run
+            run(args.config, args.port, args.reference_directory, not args.no_browser)
         elif args.action == 'smoke': print(json.dumps(smoke(args.url, args.character, args.output), indent=2))
         else:
             config, root, runtime, binary, model, bank_root, bank = inspect(args.config)

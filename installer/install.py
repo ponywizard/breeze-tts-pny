@@ -16,6 +16,7 @@ from breeze_pny import __version__
 from breeze_pny.bank import load_bank
 from breeze_pny.files import acquire, read_json, relative, sha, unpack, verify_files, write_json
 from breeze_pny.platforms import acquire_lock, default_prefix, platform_id
+from breeze_pny.voice_edit import preserve_custom_voices
 
 
 def progress(label):
@@ -77,13 +78,16 @@ def install(args):
     bank_root = bundle(bank_source, bank_sha, prefix, 'voice-packs'); bank = load_bank(bank_root)
     assets = read_json(ROOT / 'installer/assets.json')
     if bank['model_sha256'] != assets['breeze_q8']['sha256']: raise ValueError('Voice pack needs an unsupported base model')
+    if old:
+        bank_root = preserve_custom_voices(prefix, relative(prefix, old['voice_pack']), bank_root)
+        bank = load_bank(bank_root)
     item = assets['breeze_q8']; print('Preparing ' + item['file'], flush=True)
     model = acquire(args.model_file or item['url'], prefix / 'models' / item['sha256'] / item['file'], item['sha256'],
                     progress=progress('model'))
     python = Path(args.python or sys.executable).expanduser().resolve()
     subprocess.run([str(python), '-c', 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else "Python 3.11+ is required")'], check=True)
-    source_files = sorted((ROOT / 'server/breeze_pny').glob('*.py'))
-    identity = hashlib.sha256(b''.join(p.read_bytes() for p in source_files)).hexdigest()[:16]
+    source_files = sorted(p for p in (ROOT / 'server/breeze_pny').rglob('*') if p.suffix in ('.py', '.html', '.js', '.css'))
+    identity = hashlib.sha256(b''.join(p.relative_to(ROOT / 'server').as_posix().encode() + b'\0' + p.read_bytes() for p in source_files)).hexdigest()[:16]
     app = prefix / 'apps' / identity
     shutil.copytree(ROOT / 'server', app / 'server', dirs_exist_ok=True, ignore=shutil.ignore_patterns('__pycache__'))
     def rel(path): return path.relative_to(prefix).as_posix()

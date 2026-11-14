@@ -41,6 +41,8 @@ With the companion running, open a second terminal in the extracted folder:
 
 Listen to the WAV files. The first command should report adapter `pinkie`, and the second `base`. These checks work without an LLM or STT service.
 
+To browse references or replace a character's voice, stop the companion and run `voice-library.cmd`. The [voice library](VOICE_LIBRARY.md) handles audio conversion, previews, saving, and undo in a local browser.
+
 ## Optional isolated playtest
 
 Use this only when you want a disposable profile instead of your normal game saves. Extract a fresh supported Windows game release, then run:

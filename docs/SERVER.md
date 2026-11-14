@@ -63,6 +63,8 @@ breeze_pny_prefix="${XDG_DATA_HOME:-$HOME/.local/share}/breeze-tts-pny"
 
 Listen to the saved WAV files and check the reported adapter (`pinkie` or `base`). Without `--output`, the check validates the stream and reports timings without saving or playing audio. `voices` lists character IDs.
 
+To browse references or replace one, stop the companion and run the installed launcher with `voice-library`. The [local browser wizard](VOICE_LIBRARY.md) converts audio, generates previews, saves validated personal packs, and supports undo.
+
 ## Ports and startup problems
 
 The game-facing router uses port **18792**; the private native renderer uses **18797**. Use the router's `/tts` URL in the game. For other ports:

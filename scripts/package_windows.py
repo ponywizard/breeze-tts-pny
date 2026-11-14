@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'server'))
 from breeze_pny import __version__
 from breeze_pny.files import sha
-from release_files import PUBLIC_DOCUMENTS, PUBLIC_INSTALLER_FILES
+from release_files import PUBLIC_DOCUMENTS, PUBLIC_INSTALLER_FILES, server_files
 
 
 def main():
@@ -28,7 +28,7 @@ def main():
     output = args.output or ROOT / f'dist/breeze-tts-pny-{__version__}-windows-x86_64.zip'
     output.parent.mkdir(parents=True, exist_ok=True)
     files = {}
-    for path in sorted((ROOT / 'server').rglob('*.py')):
+    for path in server_files(ROOT):
         files[path.relative_to(ROOT).as_posix()] = path.read_bytes()
     for name in PUBLIC_INSTALLER_FILES + PUBLIC_DOCUMENTS:
         files[name] = (ROOT / name).read_bytes()
@@ -58,6 +58,9 @@ def main():
           'call "companion\\bin\\breeze-pny.cmd" serve\n'
           'set "result=%errorlevel%"\npopd\nif not "%BREEZE_PNY_NO_PAUSE%"=="1" pause\nexit /b %result%\n')
     batch('check-voice.cmd', 'pushd "%~dp0" || exit /b 1\n"python\\python.exe" -X utf8 "check-voice.py" %*\n'
+          'set "result=%errorlevel%"\npopd\nif not "%BREEZE_PNY_NO_PAUSE%"=="1" pause\nexit /b %result%\n')
+    batch('voice-library.cmd', 'pushd "%~dp0" || exit /b 1\n'
+          'call "companion\\bin\\breeze-pny.cmd" voice-library %*\n'
           'set "result=%errorlevel%"\npopd\nif not "%BREEZE_PNY_NO_PAUSE%"=="1" pause\nexit /b %result%\n')
     batch('prepare-playtest.cmd', 'pushd "%~dp0" || exit /b 1\n'
           '"python\\python.exe" -X utf8 "installer\\prepare_windows_playtest.py" %*\n'

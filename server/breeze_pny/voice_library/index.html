@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Breeze voice library</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+<header><div><p class="eyebrow" id="utility-version">BREEZE TTS PNY</p><h1>Voice library</h1></div><button id="close" class="quiet">Close library</button></header>
+<p class="intro">Listen to a reference, try another recording, and hear the result before saving. Your files stay on this computer.</p>
+<div id="status" role="status" aria-live="polite">Opening your voice pack…</div>
+<main>
+  <aside><label for="search">Find a character</label><input id="search" type="search" placeholder="Derpy, Twilight, Spike…"><p id="count" class="muted"></p><nav id="characters" aria-label="Characters"></nav></aside>
+  <section id="detail" hidden>
+    <div class="title"><h2 id="name"></h2><span id="custom" class="badge" hidden>Personal reference</span></div>
+    <article><h3>Current reference</h3><blockquote id="transcript"></blockquote><p id="source" class="muted"></p>
+      <button id="reference" class="quiet">Listen to reference</button><audio id="current-audio" controls hidden></audio>
+      <p id="missing" class="muted" hidden>This pack includes an encoded voice cache but no playable reference recording. You can still hear a generated preview below.</p>
+    </article>
+    <article><h3>Hear this voice</h3><label for="preview-text">Preview line</label><textarea id="preview-text" maxlength="600" rows="2">Hello! It is good to see you again. Would you like to come along?</textarea><button id="current-preview" class="quiet">Generate current voice preview</button><audio id="speech-audio" controls hidden></audio></article>
+    <article><h3>Replace reference</h3><p>Choose a clean recording with one speaker. Cut out music, other speakers, and long silences before importing.</p>
+      <label for="file">Audio recording</label><input id="file" type="file" accept="audio/*,.wav,.flac,.mp3,.ogg,.m4a">
+      <p id="file-info" class="muted">Audio formats depend on your browser. WAV is the most portable choice.</p>
+      <div class="trim"><label>Start (seconds)<input id="start" type="number" value="0" min="0" step="0.01"></label><label>End (seconds)<input id="end" type="number" min="0" step="0.01"></label><button id="convert" class="quiet" disabled>Prepare selection</button></div>
+      <audio id="replacement-audio" controls hidden></audio>
+      <label for="new-transcript">Exact words in the selected recording</label><textarea id="new-transcript" rows="3" maxlength="2000" placeholder="Transcribe every word in the selected clip."></textarea>
+      <label for="new-source">Source / notes (optional)</label><input id="new-source" maxlength="2000" placeholder="Episode, video link, performer, or your own recording">
+      <p class="muted">The selection is converted to mono 24 kHz WAV. Loudness, pitch, and background noise are left as recorded.</p>
+      <button id="try" disabled>Generate replacement preview</button><audio id="new-speech-audio" controls hidden></audio>
+      <div class="save"><button id="apply" disabled>Save reference</button><span class="muted">The previous voice pack is kept for undo.</span></div>
+    </article>
+    <footer><button id="undo" class="quiet" disabled>Undo last save</button><p class="muted">When you finish, close this library and start the companion to use your saved voices.</p></footer>
+  </section>
+</main>
+</body>
+</html>

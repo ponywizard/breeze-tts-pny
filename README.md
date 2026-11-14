@@ -6,7 +6,7 @@ The release has two parts: a game mod and a companion that generates speech. The
 
 ## Downloads
 
-Download the files for your operating system from the same [release](https://github.com/ponywizard/breeze-tts-pny/releases):
+Download the files for your operating system from the same [companion release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/v0.2.1):
 
 | Platform | Files to download |
 | --- | --- |
@@ -14,6 +14,8 @@ Download the files for your operating system from the same [release](https://git
 | Linux | `breeze_tts_pny-0.1.1-linux-x86_64.pck`, `breeze-tts-pny-server-0.2.1-linux-x86_64.tar.gz` and `breeze-pny-curated-voices-20261107.tar.gz` |
 
 The Windows ZIP includes the game mod, companion, native runtime and Python. The Linux companion archive includes its native runtime and uses your installed Python 3.11+. Game mod **0.1.1** and companion **0.2.1** are the matching versions in this release.
+
+Optional: [Reference Management Utility and Recordings v0.1.0](https://github.com/ponywizard/breeze-tts-pny/releases/tag/reference-manager-v0.1.0) is a separate prerelease for existing companion installations. Its single ZIP includes a local browser wizard and all 139 original reference recordings. Browse and play references, trim a replacement, compare generated speech, and save or undo changes. It reuses the installed model/runtime; no FFmpeg or additional Python packages are needed. See the [voice library guide](docs/VOICE_LIBRARY.md) for setup and validation limits.
 
 You need an AVX2-capable x86_64 CPU and a working Vulkan GPU driver. Setup downloads a pinned model of about 3.6 GB; allow at least 6 GB of free space for the companion and its assets. Linux binaries require glibc 2.38+ and `GLIBCXX_3.4.32`. macOS and standalone Quest builds are not included.
 
