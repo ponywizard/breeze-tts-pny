@@ -1,5 +1,13 @@
 # Companion validation
 
+## Locally prepared 0.2.2 update
+
+The reviewed vocal-cue and slow-Pinkie update passed 58 Python tests on Linux. The pinned embedded Windows Python passed the same suite under an isolated Wine prefix, with five expected skips: the optional SciPy oracle and four Linux GPU-capture tests. The portable converter also matched all 12 saved gasp-audition playback recordings byte for byte (67.01 seconds of audio).
+
+The new 139-voice pack verifies all payload hashes. Its other 138 voice caches/reference hashes, their inference settings and the other five adapters match the published pack. The slow Pinkie adapter/reference hashes match the auditioned assets. All 139 cached references were checked against the loaded native service; real Pinkie, Rainbow, Derpy and Lemon Hearts output matched the deployed lab and each other across WAV and framed PCM.
+
+These are local preparation checks, not a published release or a Windows native/VR gameplay pass. The game mod, native runtimes and Q8 model are unchanged. See [the update notes](VOICE_UPDATES.md). The remaining sections describe the earlier published 0.2.1 coverage.
+
 Companion 0.2.1 uses Python 3.11+ and its standard library. The selected `curated-ponies-20261107` bank contains 139 Breeze reference caches and six Mane Six adapters. Cache transcripts and reference hashes were compared with the native engine before export. The pack excludes private endpoints, capture settings, absolute development paths and trial voices.
 
 ## Installed service

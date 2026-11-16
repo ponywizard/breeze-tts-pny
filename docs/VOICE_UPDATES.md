@@ -34,3 +34,11 @@ A personal reference saved under a different playback profile cannot be silently
 The Python suite exercises cue preservation and idempotency, actual WAV/stream forwarding, playback receipts, truncation and cancellation, exact comparison with the SciPy lab filter, bounded buffering, reference editing, and export/schema compatibility. SciPy is an optional test oracle; it is not shipped or imported by the companion.
 
 The source retains the training and audition scripts used for the Pinkie investigation. Training datasets, models, generated conversation audio and audition pages remain outside the release payload. Runtime/pack hashes and local artifact checks are recorded with the prepared release files. Real-model checks cover the new Pinkie route and unchanged voices; they do not establish Windows VR behavior or a new general performance guarantee.
+
+`scripts/check_voice_update.py` can verify an extracted candidate pack against an already-running native service and lab router. It checks every registered reference and starts only a temporary loopback Python router, compares four real voice paths, then stops its own server. It does not load a second model or restart the lab. Bounded retries accommodate the service's documented busy response. Example:
+
+```bash
+python3 scripts/check_voice_update.py --voice-pack /path/to/extracted-pack --output build/voice-update-check
+```
+
+Use the companion 0.2.2 built-in `voice-library` command with the schema-2 pack. An older standalone reference utility may carry the previous companion code and reject the new pack; its earlier published ZIP is unchanged.

@@ -71,7 +71,8 @@ sys.path.insert(0,str(Path(__file__).resolve().parent / "server"))
 sys.argv[1:1]=["smoke"]
 runpy.run_module("breeze_pny",run_name="__main__")
 '''
-    files['START-HERE.txt'] = b'''Windows x86_64 preview; RX 6700 XT flatscreen playtest completed.
+    files['START-HERE.txt'] = b'''Windows x86_64 companion preview.
+Earlier native releases were tested in flatscreen; see docs/VALIDATION.md.
 Windows PCVR is untested and ships with case-by-case support.
 Read docs/WINDOWS.md for setup, requirements and test coverage.
 Place the curated voice-pack archive beside this folder or inside it.
