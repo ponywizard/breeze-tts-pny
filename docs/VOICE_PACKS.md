@@ -8,7 +8,7 @@ Every route must be `breeze`; retired or unknown routes are rejected. Use `--id`
 
 ## Manifest
 
-The schema version is 1. Required fields:
+The companion accepts schema 1 and 2. Schema 2 is required when any route uses playback-speed conversion, and requires companion 0.2.2+. Required fields:
 
 - `id`, `version`, `model_sha256`: identity and the compatible Breeze base.
 - `characters`: rows with `id`, optional `name`, and `route` (`breeze` only).
@@ -18,6 +18,8 @@ The schema version is 1. Required fields:
 - `files`: every payload path mapped to its SHA-256.
 
 A Breeze character selects `voice_id` and optional `settings`: `cfg_scale`, `temperature`, `depth_temperature`, `instruction`, `lora`. The server explicitly selects the stock base when `lora` is empty and rejects unacknowledged adapter selection. Inference uses seed 42, no text splitting and a 60-second audio cap. Character identity wins over placeholder speaker numbers.
+
+A schema-2 character may select `output_speed: 1.25`; this is a playback field, separate from native inference settings. The current `curated-ponies-20261115` export uses it only for the slow-trained Pinkie adapter/reference. Other rows default to normal playback. Cached-reference metadata records the matching `output_speed`. The pack advertises `minimum_companion_version`; its new schema makes older companions reject it safely. See [voice update details](VOICE_UPDATES.md).
 
 For custom voices, register a reference and exact transcript with the compatible native engine to create its `.breeze` cache, then build a manifest and inventory. `scripts/export_voice_pack.py` adapts the existing lab manifest/reference format. The native engine's [voice documentation](https://github.com/HoppouAI/Breeze-TTS-2.cpp/blob/v0.1.6/docs/voices.md) describes cache registration. Arbitrary server-side file paths or per-voice network endpoints are not supported by this pack format.
 

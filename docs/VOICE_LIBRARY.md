@@ -30,6 +30,8 @@ Keep the terminal open while using the library. It prints a local browser link; 
 
 The browser decodes supported formats, mixes channels equally to mono, resamples to 24 kHz, and writes a 16-bit PCM WAV. Browser format support varies; WAV is the most portable input. If the browser cannot open a recording, export it as WAV in an audio editor. No automatic normalization, denoising, pitch changes, or music removal is applied. The server validates the resulting WAV before registration. The saved WAV and its exact transcript remain with the personal pack.
 
+For the slow-trained Pinkie route in companion 0.2.2, the server additionally retimes a replacement to 0.8× before registration, then uses the route's matching 1.25× synthesis playback. Other routes keep normal speed. A Pinkie replacement must be at most 24 seconds before slowing; see [the voice update notes](VOICE_UPDATES.md).
+
 ## Reference recordings in older packs
 
 The original curated release contains encoded `.breeze` voice caches, not playable source WAVs. For those entries the library shows the reference transcript and offers generated speech previews. Newly replaced references always have playable recordings.

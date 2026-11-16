@@ -17,6 +17,7 @@ from .bank import ID, load_bank
 from . import REFERENCE_MANAGER_VERSION
 from .files import read_json, relative, sha, write_json
 from .native import NativePCM
+from .playback import RationalPCM
 from .platforms import acquire_lock, runtime_environment
 from .service import get, inspect
 
@@ -70,6 +71,8 @@ def custom_pack(prefix, base_root, replacements):
             row = next((r for r in bank['characters'] if r['id'] == character), None)
             if row is None:
                 raise ValueError('The new voice pack has no character named ' + character)
+            if info.get('output_speed', 1) != row.get('output_speed', 1):
+                raise ValueError('The voice playback profile changed; re-register and audition the personal reference with this pack')
             voice = Path(info['file']).stem
             if not ID.fullmatch(voice):
                 raise ValueError('Invalid custom voice ID')
@@ -227,6 +230,13 @@ class VoiceEditor:
         if not isinstance(source, str) or len(source) > 2000:
             raise ValueError('Source notes must be at most 2,000 characters')
         raw = reference_wav(raw)
+        output_speed = self.bank['routes'][character].get('output_speed', 1)
+        if output_speed == 1.25:
+            with wave.open(io.BytesIO(raw)) as wav:
+                converted = RationalPCM(5, 4).process(wav.readframes(wav.getnframes()), final=True)
+            if len(converted) > 48000 * 30:
+                raise ValueError('Trim this reference to at most 24 seconds before slowing it for this voice')
+            raw = pcm_wav(converted)
         digest = hashlib.sha256(raw).hexdigest()
         voice = 'edit_' + character[:35] + '_' + uuid.uuid4().hex[:12]
         transcript = transcript.strip()
@@ -255,7 +265,7 @@ class VoiceEditor:
             raise ValueError('Breeze did not save the reference cache')
         self.pending = {'id': uuid.uuid4().hex, 'character': character, 'voice': voice, 'raw': raw,
                         'transcript': transcript, 'sha256': digest, 'cache_sha256': sha(cache),
-                        'source': source.strip(), 'auditioned': False}
+                        'source': source.strip(), 'auditioned': False, 'output_speed': output_speed}
         return {'id': self.pending['id'], 'seconds': (len(raw) - 44) / 48000, 'transcript': transcript}
 
     def audition(self, character, text, pending_id=None):
@@ -288,8 +298,10 @@ class VoiceEditor:
             raise ValueError('The staged reference changed; prepare it again')
         reference = f'references/{voice}.wav'
         info = {'file': name, 'ref_text': pending['transcript'], 'reference_sha256': pending['sha256'],
+                'output_speed': pending['output_speed'],
                 'reference_file': reference, 'source': {'notes': pending['source'],
-                'processing': 'Browser conversion to mono 24 kHz PCM16; no automatic normalization or denoising.'}}
+                'processing': ('Browser conversion to mono 24 kHz PCM16; no automatic normalization or denoising.'
+                    + (' Reference retimed to 0.8x for the slow-trained adapter.' if pending['output_speed'] == 1.25 else ''))}}
         destination = custom_pack(self.prefix, self.bank_root, [
             (pending['character'], info, {name: cache.read_bytes(), reference: pending['raw']})])
         config = {**self.config, 'voice_pack': destination.relative_to(self.prefix).as_posix()}

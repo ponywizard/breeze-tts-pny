@@ -4,6 +4,12 @@ Breeze character voices and Talking Avatar lip-sync for **Home: Equestria 0.3.1.
 
 The release has two parts: a game mod and a companion that generates speech. The curated voice pack contains 139 reference voices and six Mane Six LoRA adapters: Applejack, Fluttershy, Pinkie Pie, Rainbow Dash, Rarity and Twilight Sparkle. The companion provides TTS; keep using your normal LLM and speech-to-text setup.
 
+## Source update: companion 0.2.2
+
+The current source adds the reviewed `(gasp)` and `(giggles)` synthesis substitutions and makes the tested slow-trained Pinkie setup the default in the new `curated-ponies-20261115` voice pack. Pinkie uses a LoRA trained on 0.8× audio, a matching 0.8× reference, and 1.25× playback. Other voices keep their existing settings. Both WAV and streaming playback use the same conversion, with no additional Python packages.
+
+These are locally prepared updates; the published downloads below remain the previous releases. The new voice pack requires companion **0.2.2 or later**. See [the update notes](docs/VOICE_UPDATES.md) for validation, compatibility and upgrade details. Game mod 0.1.3 is unchanged.
+
 ## Downloads
 
 Download **game mod 0.1.3** from the [current mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3):

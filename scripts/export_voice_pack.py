@@ -23,7 +23,7 @@ def write_bundle(path, files):
 
 
 def export(manifest, references, cache, adapters, output,
-           pack_id='curated-ponies-20261107', version='1', include_reference_audio=False):
+           pack_id='curated-ponies-20261115', version='2', include_reference_audio=False):
     if not ID.fullmatch(pack_id): raise ValueError('Invalid voice pack ID')
     source, refs = read_json(manifest), read_json(references)['voices']
     files, rows, voices, used = {}, [], {}, set()
@@ -36,12 +36,19 @@ def export(manifest, references, cache, adapters, output,
             selected = source.get('breeze_voice_settings', {}).get(voice, {})
             row['voice_id'] = voice
             row['settings'] = settings({k: selected[k] for k in ('cfg_scale', 'temperature', 'depth_temperature', 'instruction', 'lora') if k in selected})
+            if 'output_speed' in selected:
+                speed = selected['output_speed']
+                if type(speed) not in (int, float) or speed not in (1, 1.25):
+                    raise ValueError('Unsupported playback speed')
+                row['output_speed'] = speed
             if row['settings']['lora']: used.add(row['settings']['lora'])
             name = f'voices/{voice}.breeze'; raw = (cache / (voice + '.breeze')).read_bytes()
             if b'/home/' in raw or b'capture_dir' in raw: raise ValueError('Private lab path embedded in cached voice')
             files[name] = raw
             voices[voice] = {'file': name, 'ref_text': ref['transcript'], 'reference_sha256': ref['sha256'],
                              'source': {k: ref[k] for k in ('episode', 'source_url', 'annotation_url', 'processing') if k in ref}}
+            if 'output_speed' in row:
+                voices[voice]['output_speed'] = row['output_speed']
             if include_reference_audio:
                 audio = Path(ref['audio'])
                 if not audio.is_absolute(): audio = references.parent / audio
@@ -64,7 +71,8 @@ def export(manifest, references, cache, adapters, output,
         'These adapters depend on Breeze TTS 2, whose weights use the BreezeBlue Research\n'
         'and Non-Commercial License: https://huggingface.co/BreezeBlue/Breeze-TTS-2\n'
     ).encode()
-    bank = {'schema': 1, 'id': pack_id, 'version': version,
+    bank = {'schema': 2 if any(row.get('output_speed', 1) != 1 for row in rows) else 1, 'id': pack_id, 'version': version,
+            'minimum_companion_version': '0.2.2' if any(row.get('output_speed', 1) != 1 for row in rows) else '0.2.1',
             'model_sha256': 'a02bcc4b69b0601032727f8040c4942149b1b73aa0f69022fe5aaa6a8f0ef879',
             'characters': rows, 'voices': voices, 'adapters': adapter_files,
             'legacy_speakers': source.get('legacy_breeze_speakers', {}),
@@ -79,8 +87,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     for key in ('manifest', 'references', 'cache', 'output'): parser.add_argument('--' + key, type=Path, required=True)
     parser.add_argument('--adapter', action='append', default=[], metavar='ID=FILE')
-    parser.add_argument('--id', default='curated-ponies-20261107', help='Portable voice pack identity')
-    parser.add_argument('--version', default='1', help='Voice pack version')
+    parser.add_argument('--id', default='curated-ponies-20261115', help='Portable voice pack identity')
+    parser.add_argument('--version', default='2', help='Voice pack version')
     parser.add_argument('--include-reference-audio', action='store_true', help='Include verified original WAVs for voice-library playback')
     args = parser.parse_args()
     adapters = {key: Path(value) for key, value in (a.split('=', 1) for a in args.adapter)}

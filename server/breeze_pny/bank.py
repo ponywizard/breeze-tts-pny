@@ -27,7 +27,7 @@ def settings(value):
 
 def load_bank(root):
     data = read_json(root / 'voice-pack.json')
-    if data.get('schema') != 1 or not ID.fullmatch(data.get('id', '')):
+    if data.get('schema') not in (1, 2) or not ID.fullmatch(data.get('id', '')):
         raise ValueError('Unsupported voice pack')
     verify_files(root, data.get('files'))
     rows = data.get('characters', [])
@@ -41,11 +41,18 @@ def load_bank(root):
             voice = row.get('voice_id', '')
             if not ID.fullmatch(voice) or voice not in data.get('voices', {}): raise ValueError('Missing cached voice')
             row['settings'] = settings(row.get('settings', {}))
+            speed = row.get('output_speed', 1)
+            if type(speed) not in (int, float) or speed not in (1, 1.25):
+                raise ValueError('Unsupported voice playback speed')
+            if speed != 1 and data['schema'] != 2:
+                raise ValueError('Playback speed requires voice-pack schema 2 and companion 0.2.2+')
             if row['settings']['lora'] and row['settings']['lora'] not in data.get('adapters', {}):
                 raise ValueError('Missing required adapter')
         else: raise ValueError('Unsupported voice route')
         characters[identity] = row
     for voice, info in data.get('voices', {}).items():
+        if 'output_speed' in info and (type(info['output_speed']) not in (int, float) or info['output_speed'] not in (1, 1.25)):
+            raise ValueError('Unsupported reference playback speed')
         if not ID.fullmatch(voice) or info.get('file') != f'voices/{voice}.breeze' or info['file'] not in data['files']:
             raise ValueError('Invalid cached voice file')
         if not isinstance(info.get('ref_text'), str) or not re.fullmatch('[0-9a-f]{64}', info.get('reference_sha256', '')):

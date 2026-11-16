@@ -24,6 +24,7 @@ from breeze_pny.files import acquire, unpack
 from breeze_pny.router import Router, Server, handler
 from breeze_pny.__main__ import smoke
 from breeze_pny.service import check_port
+from breeze_pny.playback import Playback125
 
 PCM = b'\x01\x20' * 12000
 
@@ -109,6 +110,55 @@ class RouterChecks(unittest.TestCase):
         with wave.open(io.BytesIO(response.read())) as wav: self.assertEqual(wav.readframes(wav.getnframes()), PCM)
         connection.close()
         self.assertEqual(self.native.requests[-1]['text'], ['Hello!'])
+
+    def test_reviewed_cues_reach_both_native_transports(self):
+        for endpoint in ['/tts', '/tts/stream']:
+            for source, expected in [('Gasp! Hello.', '(gasp) Hello.'),
+                                     ('gasp ...a perfect day!', '(gasp) ...a perfect day!'),
+                                     ('Teehee! Hello.', '(giggles) Hello.'),
+                                     ('Hahahaha!', 'Hahahaha!'), ('Hmph! Hello.', 'Hmph! Hello.')]:
+                connection, response = self.request(endpoint, {'text': source, 'character_id': 'spike'})
+                self.assertEqual(response.status, 200); response.read(); connection.close()
+                self.assertEqual(self.native.requests[-1]['text'], [expected])
+
+    def test_slow_voice_playback_and_stream_receipt_match(self):
+        row = self.bank['routes']['pinkie_pie']
+        row['output_speed'] = 1.25
+        try:
+            expected = Playback125().process(PCM, final=True)
+            connection, response = self.request('/tts', {'text': 'Gasp! Hello.', 'character_id': 'pinkie_pie'})
+            self.assertEqual(response.status, 200)
+            with wave.open(io.BytesIO(response.read())) as wav:
+                self.assertEqual(wav.readframes(wav.getnframes()), expected)
+            connection.close()
+            connection, response = self.request('/tts/stream', {'text': '(gasp) Hello.', 'character_id': 'pinkie_pie'})
+            self.assertEqual(response.status, 200)
+            wire = response.read(); connection.close()
+            at, chunks = 0, []
+            while True:
+                size, = struct.unpack_from('<I', wire, at); at += 4
+                if not size: break
+                chunks.append(wire[at:at + size]); at += size
+            self.assertEqual(b''.join(chunks), expected)
+            self.assertEqual(wire[at:], struct.pack('<I', len(expected)) + hashlib.sha256(expected).digest())
+            self.assertEqual(self.native.requests[-1]['lora'], ['pinkie'])
+            self.assertNotIn('output_speed', self.native.requests[-1])
+        finally:
+            row.pop('output_speed')
+
+    def test_slow_voice_rejects_truncation_without_receipt(self):
+        row = self.bank['routes']['truncated']; row['output_speed'] = 1.25
+        try:
+            connection, response = self.request('/tts/stream', {'text': 'Hello.', 'character_id': 'truncated'})
+            wire = b''
+            try:
+                while data := response.read1(4096): wire += data
+            except http.client.IncompleteRead: pass
+            connection.close()
+            expected = Playback125().process(PCM, final=True)
+            self.assertNotIn(struct.pack('<II', 0, len(expected)) + hashlib.sha256(expected).digest(), wire)
+        finally:
+            row.pop('output_speed')
 
     def test_bad_inputs(self):
         for body in [{}, {'text': 'Hi', 'character_id': 'unknown'}, {'text': 'x' * 601}, {'text': '[happy]'}]:

@@ -6,6 +6,8 @@ import struct
 import threading
 import time
 from urllib.parse import urlencode
+from .speech import breeze_text
+from .playback import Playback125
 
 MAX_PCM = 24000 * 2 * 60
 CONTENT_TYPE = 'application/vnd.home-equestria.pcm-stream'
@@ -21,6 +23,7 @@ class NativePCM:
         self.connection = None
         self.cancelled = threading.Event()
         self.bytes = 0
+        self.native_bytes = 0
         self.digest = hashlib.sha256()
         self.adapter = None
         self.first_pcm_s = None
@@ -39,7 +42,7 @@ class NativePCM:
             self.connection.connect()
             self.socket = self.connection.sock
             if self.cancelled.is_set(): raise ConnectionAbortedError('Cancelled')
-            params = {'text': self.text, 'voice_id': self.row['voice_id'], 'seed': 42,
+            params = {'text': breeze_text(self.text), 'voice_id': self.row['voice_id'], 'seed': 42,
                       'split_chars': 0, 'max_new_tokens': 750, **self.row['settings']}
             self.connection.request('POST', '/v1/audio/speech', urlencode(params),
                                     {'Content-Type': 'application/x-www-form-urlencoded'})
@@ -58,6 +61,15 @@ class NativePCM:
 
     def chunks(self):
         carry = b''
+        converter = Playback125() if self.row.get('output_speed', 1) == 1.25 else None
+
+        def playback(raw):
+            self.bytes += len(raw)
+            if self.bytes > MAX_PCM: raise RuntimeError('Playback audio exceeds 60 seconds')
+            if self.first_pcm_s is None: self.first_pcm_s = time.monotonic() - self.started
+            self.digest.update(raw)
+            return raw
+
         while True:
             if self.cancelled.is_set(): raise ConnectionAbortedError('Cancelled')
             if time.monotonic() - self.started > 120: raise TimeoutError('Speech generation timed out')
@@ -72,15 +84,20 @@ class NativePCM:
             size = len(carry) & ~1
             if not size: continue
             raw, carry = carry[:size], carry[size:]
-            self.bytes += len(raw)
-            if self.bytes > MAX_PCM: raise RuntimeError('Native audio exceeds 60 seconds')
-            if self.first_pcm_s is None: self.first_pcm_s = time.monotonic() - self.started
-            self.digest.update(raw)
-            yield raw
+            self.native_bytes += len(raw)
+            if self.native_bytes > MAX_PCM: raise RuntimeError('Native audio exceeds 60 seconds')
+            converted = converter.process(raw) if converter else raw
+            if converted:
+                yield playback(converted)
         declared = self.response.getheader('Content-Length')
         if self.cancelled.is_set(): raise ConnectionAbortedError('Cancelled')
-        if carry or not self.bytes or (declared is not None and int(declared) != self.bytes):
+        if carry or not self.native_bytes or (declared is not None and int(declared) != self.native_bytes):
             raise RuntimeError('Truncated or invalid native PCM')
+        if converter:
+            tail = converter.process(b'', final=True)
+            if tail:
+                yield playback(tail)
+        if self.cancelled.is_set(): raise ConnectionAbortedError('Cancelled')
         self.completed = True
 
     def receipt(self):

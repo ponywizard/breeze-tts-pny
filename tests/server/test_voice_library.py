@@ -97,6 +97,24 @@ class VoiceLibraryChecks(unittest.TestCase):
         self.editor.audition('derpy_hooves', 'Hello.', result['id'])
         return result
 
+    def test_slow_profile_reference_is_retimed_and_preview_uses_playback_speed(self):
+        path = self.original / 'voice-pack.json'
+        manifest = read_json(path); manifest['schema'] = 2
+        manifest['characters'][0]['output_speed'] = 1.25
+        write_json(path, manifest)
+        self.editor.bank = load_bank(self.original)
+        result = self.editor.prepare('derpy_hooves', 'Replacement words.', WAV)
+        self.assertEqual(self.editor.pending['output_speed'], 1.25)
+        with wave.open(io.BytesIO(self.editor.pending['raw'])) as wav:
+            self.assertEqual(wav.getnframes(), 30000)
+        audition = self.editor.audition('derpy_hooves', 'Hello.', result['id'])
+        with wave.open(io.BytesIO(audition)) as wav:
+            self.assertEqual(wav.getnframes(), 9600)
+        self.editor.apply(result['id'])
+        bank = load_bank(self.editor.bank_root)
+        self.assertEqual(bank['routes']['derpy_hooves']['output_speed'], 1.25)
+        self.assertEqual(bank['voices'][bank['routes']['derpy_hooves']['voice_id']]['output_speed'], 1.25)
+
     def test_prepare_preview_apply_undo_and_shared_voice_isolation(self):
         config_before = (self.root / 'config.json').read_bytes()
         bank_before = (self.original / 'voice-pack.json').read_bytes()
@@ -248,6 +266,42 @@ class ReferenceChecks(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'differs'):
                 export(pack / 'voice-pack.json', root / 'refs.json', pack / 'voices', {}, root / 'bad.tar.gz',
                        include_reference_audio=True)
+
+    def test_export_preserves_playback_speed_in_new_schema(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder); pack = fixture(root)
+            manifest = read_json(pack / 'voice-pack.json')
+            manifest['breeze_voice_settings'] = {'shared': {'output_speed': 1.25, 'cfg_scale': 1}}
+            write_json(pack / 'voice-pack.json', manifest)
+            (root / 'reference.wav').write_bytes(WAV)
+            write_json(root / 'refs.json', {'voices': {'shared': {'audio': 'reference.wav',
+                       'transcript': 'Original words.', 'sha256': hashlib.sha256(WAV).hexdigest()}}})
+            export(pack / 'voice-pack.json', root / 'refs.json', pack / 'voices', {}, root / 'voices.tar.gz')
+            from breeze_pny.files import unpack
+            unpack(root / 'voices.tar.gz', root / 'exported')
+            bank = load_bank(root / 'exported')
+            self.assertEqual(bank['schema'], 2)
+            self.assertEqual(bank['minimum_companion_version'], '0.2.2')
+            self.assertEqual(bank['routes']['derpy_hooves']['output_speed'], 1.25)
+            self.assertNotIn('output_speed', bank['routes']['derpy_hooves']['settings'])
+            self.assertEqual(bank['voices']['shared']['output_speed'], 1.25)
+            bank['schema'] = 1
+            write_json(root / 'exported/voice-pack.json', {k:v for k,v in bank.items() if k != 'routes'})
+            with self.assertRaisesRegex(ValueError, 'schema 2'):
+                load_bank(root / 'exported')
+
+    def test_personal_reference_profile_mismatch_preserves_previous_pack(self):
+        from breeze_pny.voice_edit import custom_pack
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder); pack = fixture(root)
+            bank = read_json(pack / 'voice-pack.json'); bank['schema'] = 2
+            bank['characters'][0]['output_speed'] = 1.25
+            write_json(pack / 'voice-pack.json', bank)
+            previous = (pack / 'voice-pack.json').read_bytes()
+            replacement = {'file': 'voices/custom.breeze', 'ref_text': 'Words.', 'reference_sha256': '0' * 64}
+            with self.assertRaisesRegex(ValueError, 'playback profile changed'):
+                custom_pack(root, pack, [('derpy_hooves', replacement, {'voices/custom.breeze': b'new'})])
+            self.assertEqual((pack / 'voice-pack.json').read_bytes(), previous)
 
     def test_release_packaging_includes_browser_assets(self):
         paths = {p.relative_to(ROOT).as_posix() for p in server_files(ROOT)}
