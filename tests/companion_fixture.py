@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
 import signal
 import struct
@@ -32,8 +33,10 @@ with tempfile.TemporaryDirectory(prefix='breeze-companion-browser-') as director
     with wave.open(str(recording), 'wb') as wav:
         wav.setparams((2, 2, 48000, 0, 'NONE', 'not compressed'))
         wav.writeframes(struct.pack('<hh', 2000, 4000) * 48029)
-    server, token = create_server(fixture.app, 0)
-    print(json.dumps({'url': f'http://127.0.0.1:{server.server_port}/#{token}', 'recording': str(recording),
+    address = os.environ.get('BREEZE_TEST_WEB_ADDRESS', '127.0.0.1')
+    fixture.app.api_host = '0.0.0.0'
+    server, token = create_server(fixture.app, 0, '0.0.0.0' if address != '127.0.0.1' else address)
+    print(json.dumps({'url': f'http://{address}:{server.server_port}/#{token}', 'recording': str(recording),
                       'compressed': [], 'config': str(root / 'config.json')}), flush=True)
     try: server.serve_forever(poll_interval=.1)
     except KeyboardInterrupt: pass

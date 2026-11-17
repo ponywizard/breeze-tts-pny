@@ -53,11 +53,16 @@ def pcm_wav(pcm):
     return result.getvalue()
 
 
-def custom_pack(prefix, base_root, replacements):
+def custom_pack(prefix, base_root, replacements, additions=()):
     """Copy verified assets and publish a complete pack before changing config."""
     base = load_bank(base_root)
     bank = copy.deepcopy(base)
     bank.pop('routes', None)
+    for row in additions:
+        if any(existing['id'].casefold() == row['id'].casefold() for existing in bank['characters']):
+            raise ValueError('The voice pack already has a character named ' + row['id'])
+        bank['characters'].append(copy.deepcopy(row))
+        bank.setdefault('custom_characters', []).append(row['id'])
     parent = prefix / 'assets/voice-packs'
     parent.mkdir(parents=True, exist_ok=True)
     destination = parent / ('custom-' + uuid.uuid4().hex)
@@ -116,7 +121,8 @@ def preserve_custom_voices(prefix, previous, base_root):
         if info.get('reference_file'):
             names.append(info['reference_file'])
         replacements.append((character, info, {name: relative(previous, name).read_bytes() for name in names}))
-    return custom_pack(prefix, base_root, replacements)
+    additions = [row for row in old['characters'] if row['id'] in old.get('custom_characters', [])]
+    return custom_pack(prefix, base_root, replacements, additions)
 
 
 class VoiceEditor:
@@ -187,7 +193,8 @@ class VoiceEditor:
             info = self.bank['voices'][voice]
             rows.append({'id': row['id'], 'name': row.get('name', row['id']), 'voice_id': voice,
                          'transcript': info['ref_text'], 'reference_available': self.reference(voice) is not None,
-                         'custom': row['id'] in self.bank.get('custom_voices', {}), 'source': info.get('source', {})})
+                         'custom': row['id'] in self.bank.get('custom_voices', {}),
+                         'added': row['id'] in self.bank.get('custom_characters', []), 'source': info.get('source', {})})
         return {'utility_version': REFERENCE_MANAGER_VERSION,
                 'characters': sorted(rows, key=lambda row: row['name'].casefold()),
                 'can_undo': (self.bank_root / 'voice-edit.json').is_file()}
@@ -236,16 +243,33 @@ class VoiceEditor:
             time.sleep(.25)
         raise TimeoutError('Breeze took too long to start; inspect ' + str(path))
 
-    def prepare(self, character, transcript, raw, source=''):
+    def new_character(self, character, name):
+        if not isinstance(character, str) or not ID.fullmatch(character):
+            raise ValueError('Use a voice ID of 1-64 letters, numbers, underscores or hyphens')
+        if any(identity.casefold() == character.casefold() for identity in self.bank['routes']):
+            raise ValueError('That voice ID already exists; choose another ID')
+        if not isinstance(name, str) or not 1 <= len(name.strip()) <= 100 or any(ord(c) < 32 for c in name):
+            raise ValueError('Enter a voice name of 1-100 characters without control characters')
+        name = name.strip()
+        if any(row.get('name', row['id']).casefold() == name.casefold() for row in self.bank['characters']):
+            raise ValueError('That voice name already exists; choose another name')
+        if len(self.bank['characters']) >= 1000:
+            raise ValueError('A voice pack can contain at most 1,000 voices')
+        return {'id': character, 'name': name, 'route': 'breeze',
+                'settings': {'cfg_scale': 1, 'temperature': .7, 'lora': ''}}
+
+    def prepare(self, character, transcript, raw, source='', *, name=None):
         self.unchanged()
-        if character not in self.bank['routes']:
+        addition = self.new_character(character, name) if name is not None else None
+        if addition is None and (not isinstance(character, str) or character not in self.bank['routes']):
             raise ValueError('Choose a known character')
         if not isinstance(transcript, str) or not 1 <= len(transcript.strip()) <= 2000:
             raise ValueError('Enter the exact reference transcript (up to 2,000 characters)')
         if not isinstance(source, str) or len(source) > 2000:
             raise ValueError('Source notes must be at most 2,000 characters')
         raw = reference_wav(raw)
-        output_speed = self.bank['routes'][character].get('output_speed', 1)
+        row = addition if addition is not None else self.bank['routes'][character]
+        output_speed = row.get('output_speed', 1)
         if output_speed == 1.25:
             with wave.open(io.BytesIO(raw)) as wav:
                 converted = RationalPCM(5, 4).process(wav.readframes(wav.getnframes()), final=True)
@@ -280,19 +304,23 @@ class VoiceEditor:
             raise ValueError('Breeze did not save the reference cache')
         self.pending = {'id': uuid.uuid4().hex, 'character': character, 'voice': voice, 'raw': raw,
                         'transcript': transcript, 'sha256': digest, 'cache_sha256': sha(cache),
-                        'source': source.strip(), 'auditioned': False, 'output_speed': output_speed}
-        return {'id': self.pending['id'], 'seconds': (len(raw) - 44) / 48000, 'transcript': transcript}
+                        'source': source.strip(), 'auditioned': False, 'output_speed': output_speed,
+                        'new_character': addition}
+        return {'id': self.pending['id'], 'character': character, 'seconds': (len(raw) - 44) / 48000, 'transcript': transcript}
 
     def audition(self, character, text, pending_id=None, watch=None):
-        if character not in self.bank['routes']:
-            raise ValueError('Choose a known character')
         if not isinstance(text, str) or not 1 <= len(text.strip()) <= 600:
             raise ValueError('Enter a preview line (up to 600 characters)')
-        row = copy.deepcopy(self.bank['routes'][character])
+        if not isinstance(character, str): raise ValueError('Choose a known character')
+        row = self.bank['routes'].get(character)
         if pending_id:
             pending = self.pending
             if not pending or pending['id'] != pending_id or pending['character'] != character:
                 raise ValueError('Prepare this replacement again before previewing')
+            row = pending['new_character'] or row
+        if row is None: raise ValueError('Choose a known character')
+        row = copy.deepcopy(row)
+        if pending_id:
             row['voice_id'] = pending['voice']
         self.start_native()
         reader = NativePCM(self.native_port, row, text.strip())
@@ -322,8 +350,9 @@ class VoiceEditor:
                 'reference_file': reference, 'source': {'notes': pending['source'],
                 'processing': ('Browser conversion to mono 24 kHz PCM16; no automatic normalization or denoising.'
                     + (' Reference retimed to 0.8x for the slow-trained adapter.' if pending['output_speed'] == 1.25 else ''))}}
+        additions = [pending['new_character']] if pending['new_character'] else []
         destination = custom_pack(self.prefix, self.bank_root, [
-            (pending['character'], info, {name: cache.read_bytes(), reference: pending['raw']})])
+            (pending['character'], info, {name: cache.read_bytes(), reference: pending['raw']})], additions)
         config = {**self.config, 'voice_pack': destination.relative_to(self.prefix).as_posix()}
         write_json(self.config_path, config)
         self.config, self.bank_root = config, destination

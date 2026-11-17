@@ -4,6 +4,8 @@
 
 The **Voices** tab in `breeze-pny serve --web` (Windows: `breeze-companion.cmd`) integrates this reference workflow with speech generation and model management. It shares the loaded model and one synthesis slot with the game API. Save and Undo apply immediately; keep the companion running. Load a model from Models before preparing or auditioning a reference. Existing reference playback works even with the model unloaded.
 
+Companion 0.3.2 also offers **Add voice** in Companion for a new name and reference, with preview, save, undo and preservation across updates. See [adding custom voices](COMPANION.md#add-a-custom-voice). The separate legacy utility described below still replaces existing character references.
+
 The new curated pack includes all 139 playable reference WAVs, including Pinkie’s slowed reference. The steps below also describe the separate legacy utility; instructions to stop/restart the companion apply only to that separate utility.
 
 ## Separate utility

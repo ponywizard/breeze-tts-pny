@@ -62,8 +62,10 @@ def main():
     for name in ('serve', 'doctor', 'voices'):
         sub = commands.add_parser(name); sub.add_argument('--config', type=Path, default=os.environ.get('BREEZE_PNY_CONFIG'))
         if name == 'serve':
-            sub.add_argument('--host'); sub.add_argument('--port', type=int); sub.add_argument('--native-port', type=int)
+            sub.add_argument('--host', help='Game API IPv4 bind address (does not change the web UI)')
+            sub.add_argument('--port', type=int); sub.add_argument('--native-port', type=int)
             sub.add_argument('--web', action='store_true', help='Open Breeze Companion: Generate, Voices and Models')
+            sub.add_argument('--web-host', default='127.0.0.1', help='Web UI IPv4 bind address (default: 127.0.0.1; use 0.0.0.0 for LAN access)')
             sub.add_argument('--web-port', type=int, default=18793)
             sub.add_argument('--no-browser', action='store_true')
             sub.add_argument('--reference-directory', type=Path)
@@ -83,7 +85,8 @@ def main():
         if args.action == 'serve':
             if args.web:
                 from .web import run
-                run(args.config, args.host, args.port, args.native_port, args.web_port, not args.no_browser, args.reference_directory)
+                run(args.config, args.host, args.port, args.native_port, args.web_port, not args.no_browser,
+                    args.reference_directory, web_host=args.web_host)
             else: serve(args.config, args.host, args.port, args.native_port)
         elif args.action == 'voice-library':
             from .voice_library import run

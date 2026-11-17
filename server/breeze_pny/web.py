@@ -1,4 +1,4 @@
-"""Loopback management UI; the game API remains on its separate listener."""
+"""Token-protected management UI; the game API has its own listener."""
 import base64
 import binascii
 import hmac
@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import secrets
 import signal
+import socket
 import threading
 import time
 from urllib.parse import parse_qs, urlsplit
@@ -19,7 +20,22 @@ from .router import Server, handler
 STATIC = Path(__file__).with_name('web')
 
 
-def create_server(companion, port=18793):
+def browser_hosts(host):
+    """Offer usable links for a wildcard listener, without requiring discovery."""
+    if host != '0.0.0.0': return [host]
+    addresses = set()
+    try:
+        for result in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET, socket.SOCK_STREAM):
+            address = ipaddress.IPv4Address(result[4][0])
+            if not (address.is_loopback or address.is_unspecified or address.is_multicast):
+                addresses.add(str(address))
+    except OSError:
+        pass
+    return ['127.0.0.1', *sorted(addresses)]
+
+
+def create_server(companion, port=18793, host='127.0.0.1'):
+    host = str(ipaddress.IPv4Address(host))
     token = secrets.token_urlsafe(32)
     base = handler(companion.router)
 
@@ -36,9 +52,11 @@ def create_server(companion, port=18793):
             self.wfile.write(raw)
 
         def authorized(self):
-            origin = f'http://127.0.0.1:{self.server.server_port}'
-            return (self.headers.get('Host') == origin[7:]
-                    and self.headers.get('Origin', origin) == origin
+            # The accepted socket identifies the local interface even when bound
+            # to 0.0.0.0. Never trust arbitrary Host values or forwarded headers.
+            origin = f'http://{self.connection.getsockname()[0]}:{self.server.server_port}'
+            return (self.headers.get_all('Host', []) == [origin[7:]]
+                    and self.headers.get_all('Origin', [origin]) == [origin]
                     and hmac.compare_digest(self.headers.get('X-Breeze-Token', '').encode(), token.encode()))
 
         def do_GET(self):
@@ -92,7 +110,8 @@ def create_server(companion, port=18793):
                     return self.json_reply(503, {'error': 'Companion is stopping'})
                 if self.path == '/api/prepare':
                     wav = base64.b64decode(body.get('wav', ''), validate=True)
-                    result = companion.prepare(body.get('character'), body.get('transcript'), wav, body.get('source', ''))
+                    result = companion.prepare(body.get('character'), body.get('transcript'), wav, body.get('source', ''),
+                                               name=body.get('name'))
                 elif self.path == '/api/audition':
                     def watch(stream):
                         finished = threading.Event()
@@ -113,11 +132,13 @@ def create_server(companion, port=18793):
             finally:
                 if locked: companion.router.lock.release()
 
-    server = Server(('127.0.0.1', port), Handler)
+    server = Server((host, port), Handler)
     return server, token
 
 
-def run(config_path, host=None, port=None, native_port=None, web_port=18793, open_browser=True, reference_directory=None):
+def run(config_path, host=None, port=None, native_port=None, web_port=18793, open_browser=True, reference_directory=None,
+        web_host='127.0.0.1'):
+    web_host = str(ipaddress.IPv4Address(web_host))
     companion = Companion(config_path, reference_directory, native_port)
     servers, threads, previous = [], [], {}
     logs = companion.prefix / 'logs'; logs.mkdir(exist_ok=True)
@@ -131,8 +152,8 @@ def run(config_path, host=None, port=None, native_port=None, web_port=18793, ope
         if api_port == companion.native_port or (web_port and web_port in (api_port, companion.native_port)):
             raise ValueError('API, web and native ports must differ')
         api = Server((api_host, api_port), handler(companion.router)); servers.append(api)
-        companion.api_port = api.server_port
-        web, token = create_server(companion, web_port); servers.append(web)
+        companion.api_host, companion.api_port = api_host, api.server_port
+        web, token = create_server(companion, web_port, web_host); servers.append(web)
         for server in servers:
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start(); threads.append(thread)
@@ -140,13 +161,16 @@ def run(config_path, host=None, port=None, native_port=None, web_port=18793, ope
         if hasattr(signal, 'SIGBREAK'): signals.append(signal.SIGBREAK)
         for sig in signals:
             previous[sig] = signal.signal(sig, lambda *_: companion.stopping.set())
-        url = f'http://127.0.0.1:{web.server_port}/#{token}'
-        print('Breeze Companion: ' + url, flush=True)
+        urls = [f'http://{address}:{web.server_port}/#{token}' for address in browser_hosts(web_host)]
+        for url in urls:
+            print('Breeze Companion: ' + url, flush=True)
+        if web_host == '0.0.0.0':
+            print('LAN: use this computer\'s LAN IPv4 address in the link, keeping the port and #token.', flush=True)
         print(f'TTS API: http://{api_host}:{api.server_port}/tts', flush=True)
         print('Keep this terminal open. Ctrl+C stops the companion.', flush=True)
         with capture_events(logs / ('companion-web-' + str(time.time_ns()) + '.jsonl')):
             if companion.config.get('autoload', True): companion.submit('load')
-            if open_browser: webbrowser.open(url)
+            if open_browser: webbrowser.open(urls[0])
             while not companion.stopping.wait(.25):
                 if companion.phase == 'ready' and not companion.healthy():
                     companion.phase, companion.error = 'error', 'The renderer stopped. Load a model again to recover.'

@@ -13,11 +13,11 @@ For Windows, use [the Windows package](WINDOWS.md), which includes Python and th
 
 ## Install
 
-Existing 0.3.0 users should follow [Upgrade from 0.3.0](COMPANION.md#upgrade-from-030) to update the companion while keeping installed models and personal references.
+Existing 0.3.0/0.3.1 users should follow [Upgrade from 0.3.0 or 0.3.1](COMPANION.md#upgrade-from-030) to update the companion while keeping installed models and personal references.
 
 Download these matching release files:
 
-- `breeze-tts-pny-server-0.3.1-linux-x86_64.tar.gz`
+- `breeze-tts-pny-server-0.3.2-linux-x86_64.tar.gz`
 - `breeze-pny-curated-voices-20261115.tar.gz`
 - `breeze_tts_pny-0.1.3-linux-x86_64.pck` for the game
 
@@ -26,8 +26,8 @@ Download these matching release files:
 Extract the server archive, put the voice-pack `.tar.gz` inside the extracted folder alongside `installer/`, and leave the voice pack compressed:
 
 ```bash
-tar -xzf breeze-tts-pny-server-0.3.1-linux-x86_64.tar.gz
-cd breeze-tts-pny-server-0.3.1-linux-x86_64
+tar -xzf breeze-tts-pny-server-0.3.2-linux-x86_64.tar.gz
+cd breeze-tts-pny-server-0.3.2-linux-x86_64
 # Copy the downloaded voice archive into this directory before continuing.
 breeze_pny_prefix="${XDG_DATA_HOME:-$HOME/.local/share}/breeze-tts-pny"
 python3 installer/install.py --prefix "$breeze_pny_prefix"
@@ -41,7 +41,7 @@ The voice archive may also be beside the extracted server folder. Custom locatio
 
 ## Browser UI and standalone generation
 
-Use the installed launcher with `serve --web`. This opens **Breeze Companion**, with Generate, Voices and Models tabs, and also serves the usual game API. The game is optional. Use the full link printed in the terminal, including its session token. `--no-browser` only prints the link; `--web-port 19093` changes the UI port. The UI binds to loopback even if the game API uses another host.
+Use the installed launcher with `serve --web`. This opens **Breeze Companion**, with Generate, Voices and Models tabs, and also serves the usual game API. The game is optional. Use the full link printed in the terminal, including its session token. `--no-browser` only prints the link; `--web-port 19093` changes the UI port. The UI defaults to loopback independently of the game API's host. Companion 0.3.2 adds [`--web-host` for LAN browser access](COMPANION.md#lan-hosting).
 
 See [the Companion guide](COMPANION.md) for model downloads, switching, unloading, speech downloads and reference editing. Close any separately running companion or old voice-library utility first; one process owns an installation. Ctrl+C stops it.
 
@@ -97,6 +97,8 @@ ssh -N -L 127.0.0.1:18792:127.0.0.1:18792 user@inference-machine
 ```
 
 Keep this terminal open. The game still uses `http://127.0.0.1:18792/tts`. On a trusted LAN, `serve --host 0.0.0.0` exposes the router for the game to use that machine's LAN IP. The HTTP interface has no authentication or TLS; native synthesis remains on loopback.
+
+For direct LAN browser access in Companion 0.3.2, use `serve --web --web-host 0.0.0.0 --no-browser`. Add `--host 0.0.0.0` if the game also connects over the LAN. See [LAN hosting](COMPANION.md#lan-hosting) for session links and firewall setup.
 
 ## Updates, logs and removal
 

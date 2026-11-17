@@ -1,5 +1,15 @@
 # Companion validation
 
+## Breeze Companion 0.3.2
+
+The 81-test Python suite passes on Linux and under the bundled Windows Python in Wine (five expected skips). New checks cover independent API/web CLI addresses, default/specific/wildcard listeners, per-interface Host/Origin checks, missing or wrong tokens, duplicate headers and address-discovery failure. Voice checks cover adding a named route, rejecting duplicate/invalid names and IDs, requiring a preview, immediate generation, model switching, restart, replacement, undo, update preservation and conflicts with new curated IDs. The installer test preserves both a curated reference replacement and an added voice.
+
+The Chromium workflow passes through both loopback and this machine's LAN IPv4 address with the UI bound to all interfaces. It covers new voice name/ID entry, preview invalidation after edits, save, Generate, reload, undo and safe rendering of names, plus the existing reference, seed/direction, cancellation, model and mobile checks. Browser tests use fixture audio; these checks do not establish voice quality. The LAN check uses the host's own interface, not a second physical computer. Native Windows browser/firewall and GPU testing remain for release qualification.
+
+The release archives pass the nested-archive audit with no findings. Disposable packaged installations upgrade from 0.3.1 on Linux and under embedded Windows Python/Wine, preserving configuration and reusing the verified Q8 model. Both installed launchers serve the authenticated UI through the LAN interface, including the Windows `breeze-companion.cmd --web-host 0.0.0.0` path. The packaged Linux renderer registers an added voice from a bundled reference, auditions it and generates valid Q8 speech through the game API; another packaged update and renderer restart retain the added voice and produce valid speech again. This checks functional registration and persistence, not subjective voice quality. The Windows launcher check keeps the renderer unloaded.
+
+To repeat the LAN browser check, set `BREEZE_TEST_WEB_ADDRESS` to an IPv4 address assigned to the test machine before running `node tests/companion_browser.cjs`. The fixture binds a temporary wildcard web listener, prints its session link to the test driver and closes it afterward.
+
 ## Breeze Companion 0.3.1
 
 Companion 0.3.1 passes 73 Python tests on Linux and the Chromium workflow checks, including randomized seeds, retaining the last seed, manual seed entry, invalid-input rejection, persistence after reload, delivery direction, cancellation recovery and mobile layout. Both speech transports forward explicit seeds, return `X-Breeze-Seed`, reject invalid seeds before native synthesis and retain the default of 42 when omitted. Direction checks cover Unicode and length/type validation, preserving curated instructions (including deliberately empty ones), keeping spoken text separate, restoring defaults after a directed request, and displaying the completed take's direction safely without changing it when the input is edited.

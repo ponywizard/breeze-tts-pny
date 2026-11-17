@@ -28,6 +28,7 @@ function controls() {
   document.querySelectorAll('#tab-voices button,#tab-voices input,#tab-voices textarea').forEach(element => { element.disabled = busy; });
   $('convert').disabled = busy || !decoded;
   $('try').disabled = busy || !converted || !$('new-transcript').value.trim();
+  if (selected?.new && (!$('new-name').value.trim() || !$('new-id').value)) $('try').disabled = true;
   $('apply').disabled = busy || !pending;
   $('undo').disabled = busy || !state?.can_undo;
   $('reference').disabled = busy || !selected?.reference_available;
@@ -108,7 +109,7 @@ function invalidate() {
 function renderList() {
   const query = $('search').value.toLocaleLowerCase();
   const rows = state.characters.filter(row => `${row.name} ${row.id}`.toLocaleLowerCase().includes(query));
-  $('count').textContent = `${rows.length} of ${state.characters.length} characters`;
+  $('count').textContent = `${rows.length} of ${state.characters.length} voices`;
   $('characters').replaceChildren(...rows.map(row => {
     const button = document.createElement('button');
     button.textContent = row.name + (row.custom ? ' ·' : '');
@@ -119,11 +120,20 @@ function renderList() {
   }));
 }
 function select(id) {
-  selected = state.characters.find(row => row.id === id) || state.characters[0];
+  selected = id === null ? {new: true, name: 'Add a voice'} : state.characters.find(row => row.id === id) || state.characters[0];
   $('detail').hidden = false; $('name').textContent = selected.name;
-  $('transcript').textContent = selected.transcript;
+  $('new-voice-fields').hidden = !selected.new;
+  $('new-name').value = ''; $('new-id').value = ''; delete $('new-id').dataset.edited;
+  $('current-reference').hidden = Boolean(selected.new);
+  $('current-preview').hidden = Boolean(selected.new);
+  $('voice-id').textContent = selected.new ? '' : 'Voice ID: ' + selected.id;
+  $('reference-heading').textContent = selected.new ? 'Reference recording' : 'Replace reference';
+  $('try').textContent = selected.new ? 'Generate voice preview' : 'Generate replacement preview';
+  $('apply').textContent = selected.new ? 'Save voice' : 'Save reference';
+  $('transcript').textContent = selected.transcript || '';
   renderProvenance('source', selected);
   $('custom').hidden = !selected.custom;
+  $('custom').textContent = selected.added ? 'Custom voice' : 'Personal reference';
   $('reference').hidden = !selected.reference_available;
   $('missing').hidden = selected.reference_available;
   decoded = converted = pending = null;
@@ -133,6 +143,16 @@ function select(id) {
   for (const id of ['current-audio', 'speech-audio', 'replacement-audio', 'new-speech-audio']) clearAudio(id);
   renderList(); controls();
 }
+$('add-voice').onclick = () => { select(null); $('new-name').focus(); };
+$('new-name').oninput = () => {
+  if (!$('new-id').dataset.edited) {
+    const slug = $('new-name').value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    $('new-id').value = slug ? ('custom_' + slug).slice(0, 64) : '';
+  }
+  invalidate();
+};
+$('new-id').oninput = () => { $('new-id').dataset.edited = 'true'; invalidate(); };
 function wavBlob(samples) {
   const buffer = new ArrayBuffer(44 + samples.length * 2), view = new DataView(buffer);
   const string = (at, value) => { for (let i = 0; i < value.length; i++) view.setUint8(at + i, value.charCodeAt(i)); };
@@ -201,23 +221,27 @@ $('file').onchange = () => perform('Reading the recording locally…', async () 
 for (const id of ['start', 'end']) $(id).oninput = () => { converted = null; invalidate(); clearAudio('replacement-audio'); };
 $('convert').onclick = () => perform('Preparing selection…', convertSelection);
 for (const id of ['new-transcript', 'new-source', 'preview-text']) $(id).oninput = invalidate;
-$('try').onclick = () => perform('Preparing your reference and generating a preview…', async () => {
-  pending = null;
-  const proposal = await request('/api/prepare', {character: selected.id, transcript: $('new-transcript').value,
-    source: $('new-source').value, wav: await base64(converted)});
-  showAudio('new-speech-audio', await request('/api/audition', {character: selected.id, text: $('preview-text').value, pending_id: proposal.id}));
-  pending = proposal.id;
-  status('Replacement preview ready. Listen before saving.');
-});
+$('try').onclick = () => {
+  if (selected.new && (!$('new-name').reportValidity() || !$('new-id').reportValidity())) return;
+  return perform('Preparing your reference and generating a preview…', async () => {
+    pending = null;
+    const character = selected.new ? $('new-id').value : selected.id;
+    const proposal = await request('/api/prepare', {character, ...(selected.new ? {name: $('new-name').value} : {}), transcript: $('new-transcript').value,
+      source: $('new-source').value, wav: await base64(converted)});
+    showAudio('new-speech-audio', await request('/api/audition', {character, text: $('preview-text').value, pending_id: proposal.id}));
+    pending = proposal;
+    status('Voice preview ready. Listen before saving.');
+  });
+};
 $('apply').onclick = () => perform('Saving your reference and keeping the previous voice pack…', async () => {
-  const identity = selected.id;
-  state = await request('/api/apply', {pending_id: pending});
-  select(identity);
+  const identity = pending.character;
+  state = await request('/api/apply', {pending_id: pending.id});
+  select(identity); renderVoices();
   status('Reference saved. Generation and the API now use this voice.');
 });
 $('undo').onclick = () => perform('Restoring the previous voice pack…', async () => {
   const identity = selected.id;
-  state = await request('/api/undo', {}); select(identity);
+  state = await request('/api/undo', {}); select(identity); renderVoices();
   status('Previous voice pack restored.');
 });
 
@@ -273,14 +297,23 @@ async function refresh() {
   try {
     const next = await request('/api/state');
     const first = !state;
+    const voicesChanged = JSON.stringify(next.characters) !== JSON.stringify(state?.characters);
     state = next;
     $('version').textContent = state.version;
     $('pack').textContent = state.characters.length + ' voices · ' + state.voice_pack;
-    $('api-address').textContent = 'TTS API: http://127.0.0.1:' + state.api_port + '/tts';
+    const apiHost = state.api_host === '0.0.0.0' ? location.hostname : state.api_host;
+    const localOnly = /^127\./.test(apiHost) && !/^127\./.test(location.hostname);
+    $('api-address').textContent = `TTS API${localOnly ? ' on server' : ''}: http://${apiHost}:${state.api_port}/tts${localOnly ? ' (LAN access is off)' : ''}`;
     const loaded = state.models.find(item => item.loaded);
     $('engine').textContent = state.ready ? `${loaded?.name || 'Model'} ready` : state.phase === 'loading' ? 'Loading model…' : state.phase === 'error' ? 'Renderer stopped' : 'Model unloaded';
     if (first) { select('derpy_hooves'); renderVoices(); }
-    else $('generate').disabled = Boolean(generation) || !state.ready || !$('voice').value || !$('text').value.trim();
+    else {
+      if (voicesChanged) {
+        renderList(); renderVoices();
+        if (!busy && selected && !selected.new && !state.characters.some(row => row.id === selected.id)) select(state.characters[0].id);
+      }
+      $('generate').disabled = Boolean(generation) || !state.ready || !$('voice').value || !$('text').value.trim();
+    }
     renderGenerateProvenance();
     renderModels();
     const job = state.job;

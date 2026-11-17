@@ -20,7 +20,7 @@ Global Ponese and disabled-TTS settings still take precedence. Other providers a
 
 The full game archive reports base project version `0.3.1-maredev`; its cumulative patch reports `0.3.1.2-maredev` through `world/debug/version.gd`. Validation and the optional Windows playtest helper check that effective version. Validation stages both official packs and the cumulative update, so an older base cannot silently stand in for the targeted release.
 
-The mod and companion have independent versions. Game mod 0.1.3 continues to work with the published companion 0.2.1 and with Breeze Companion 0.3.1. The companion includes the browser UI, model management, reviewed cues and new Pinkie profile introduced in 0.3.0; 0.3.1 adds seed and delivery-direction controls.
+The mod and companion have independent versions. Game mod 0.1.3 continues to work with the published companion 0.2.1 and with Breeze Companion 0.3.2. The companion includes the browser UI, model management, reviewed cues and new Pinkie profile introduced in 0.3.0; 0.3.1 adds seed and delivery-direction controls; 0.3.2 adds opt-in LAN browser hosting and named custom voices.
 
 ## Companion UI and model ownership
 

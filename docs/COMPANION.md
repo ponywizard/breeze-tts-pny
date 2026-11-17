@@ -1,4 +1,4 @@
-# Breeze Companion 0.3.1
+# Breeze Companion 0.3.2
 
 Breeze Companion is a local browser interface for speech generation, personal voice references and model management. It works without Home: Equestria. A single native renderer supplies the browser and the game-compatible HTTP API, so the model is loaded only once.
 
@@ -16,7 +16,31 @@ One process owns an installation. Stop a previously running API-only companion o
 
 If startup exits with **Address already in use**, another service or SSH tunnel may own the API or web port. Use `serve --web --port 18794` to try another API port, or `--web-port 19093` for another web port. The UI opens only after both listeners start; use the complete session link the launcher prints. On Linux, `ss -ltnp '( sport = :18792 or sport = :18793 or sport = :18797 )'` identifies listeners on the default ports.
 
-The browser listener always binds to `127.0.0.1`, validates Host/Origin and requires its per-session token for API operations. `--host` controls only the existing game API; it does not expose model downloads or file deletion over the LAN. The game API still has no authentication or TLS. For another machine, use the existing documented SSH forwarding setup. All browser assets are bundled; no frontend packages or CDNs are required.
+The browser listener defaults to `127.0.0.1`, validates Host/Origin and requires its per-session token for API operations. `--host` controls only the game API, which has no authentication or TLS. All browser assets are bundled; no frontend packages or CDNs are required.
+
+## LAN hosting
+
+On Windows, open PowerShell in the extracted companion folder and run:
+
+```powershell
+.\breeze-companion.cmd --web-host 0.0.0.0 --no-browser
+```
+
+On Linux, use `breeze-pny serve --web --web-host 0.0.0.0 --no-browser`. The new `--web-host` flag accepts an IPv4 address; `0.0.0.0` listens on all IPv4 interfaces. To limit it to one interface, supply that computer's LAN IPv4 address instead of `0.0.0.0`. Without this flag, the UI remains local. Companion 0.3.1 and earlier do not have this flag.
+
+On the other computer, open the complete printed link with the server's LAN IP, port and `#token`: `http://<server-LAN-IP>:18793/#<token>`. With `0.0.0.0`, the launcher prints a local link and any addresses it discovers. If no suitable LAN link appears, find the server's IPv4 address with `ipconfig` on Windows and replace only `127.0.0.1` in the local link. Use a numeric IPv4 address, not the computer name. The token changes when Companion restarts.
+
+Allow inbound TCP **18793** (or your `--web-port`) through the server's firewall for your private LAN. This grants holders of the session link access to Generate, Voices and Models, including model deletion. Use it only on a trusted network; the web connection is HTTP. Do not forward this port from the internet.
+
+To also connect the game from another computer, add `--host 0.0.0.0`, allow TCP **18792**, and set the game's TTS URL to `http://<server-LAN-IP>:18792/tts`. Browser generation needs only the web port. The native renderer stays on loopback. These flags apply to that launch; for repeated Windows use, add them to a shortcut to `breeze-companion.cmd`.
+
+## Add a custom voice
+
+In **Voices**, select **Add voice**, enter a name, and keep or edit the suggested voice ID. Import a clean recording with one speaker, select 0.25–30 seconds, and enter its exact transcript. Load a model in **Models** first, then select **Generate voice preview**, listen, and **Save voice**.
+
+The new name appears immediately in **Generate** and **Voices**. API clients use its displayed ID as `character_id`. Added voices use the base model without a pony LoRA adapter; adding one does not create a new character in the game. Existing character replacements still retain that character's adapter and playback settings.
+
+New voices and their reference audio survive restarts and compatible companion/voice-pack updates. **Undo last save** removes the latest addition or restores the previous reference. The original curated pack is kept. If a future curated pack introduces the same ID as an added voice, the update stops instead of overwriting it.
 
 ## Generate
 
@@ -66,14 +90,16 @@ The Voices tab contains the Reference Manager: search characters, play original 
 
 Saved voices immediately apply to both Generate and the game API. The curated archive includes all original WAVs, and personal packs retain replacement WAVs. Loading another model discards an unsaved prepared replacement; prepare and audition it again before saving. Unchanged reference caches can be reused within the pinned model family.
 
-## Upgrade from 0.3.0
+<a id="upgrade-from-030"></a>
+
+## Upgrade from 0.3.0 or 0.3.1
 
 Stop the running companion before updating. The game mod, native runtime, models and `breeze-pny-curated-voices-20261115.tar.gz` are unchanged; reuse your existing voice archive.
 
-- **Linux:** extract the 0.3.1 archive, place the voice archive inside or beside it, and run `python3 installer/install.py --prefix /path/to/existing/installation --update` from the extracted folder.
-- **Windows:** copy the contents of the extracted 0.3.1 package into your existing package folder (the one containing `setup.cmd` and `companion/`), keeping the `companion/` directory. Place the voice archive inside or beside that folder, then run `setup.cmd --update`.
+- **Linux:** extract the 0.3.2 archive, place the voice archive inside or beside it, and run `python3 installer/install.py --prefix /path/to/existing/installation --update` from the extracted folder.
+- **Windows:** copy the contents of the extracted 0.3.2 package into your existing package folder (the one containing `setup.cmd` and `companion/`), keeping the `companion/` directory. Place the voice archive inside or beside that folder, then run `setup.cmd --update`.
 
-Setup preserves the selected model, ports and personal references and reuses verified assets. Restart using the installed launcher, retaining any port overrides such as `--port 18794`, and open its new session link. The page header should show **0.3.1**; refreshing an old running process does not load the updated Python server.
+Setup preserves the selected model, ports and personal references and reuses verified assets. Restart using the installed launcher, retaining any port overrides such as `--port 18794`, and open its new session link. The page header should show **0.3.2**; refreshing an old running process does not load the updated Python server.
 
 ## Upgrade from 0.2.1
 

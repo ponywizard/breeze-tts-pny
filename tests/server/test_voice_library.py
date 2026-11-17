@@ -201,6 +201,53 @@ class VoiceLibraryChecks(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'previous model'):
             preserve_custom_voices(self.root, self.editor.bank_root, base)
 
+    def test_new_named_voice_save_replace_restart_upgrade_and_undo(self):
+        original = read_json(self.original / 'voice-pack.json')
+        prepared = self.editor.prepare('custom_narrator', 'New words.', WAV, 'My recording', name='My narrator')
+        self.assertNotIn('custom_narrator', self.editor.bank['routes'])
+        with self.assertRaisesRegex(ValueError, 'preview'): self.editor.apply(prepared['id'])
+        with self.assertRaisesRegex(ValueError, 'again'): self.editor.audition('spike', 'Hello.', prepared['id'])
+        self.editor.audition('custom_narrator', 'Hello.', prepared['id'])
+        self.editor.apply(prepared['id'])
+        added_root = self.editor.bank_root
+        bank = load_bank(added_root)
+        row = bank['routes']['custom_narrator']
+        self.assertEqual(row['name'], 'My narrator')
+        self.assertEqual(row['settings']['lora'], '')
+        self.assertEqual(bank['characters'][:2], original['characters'])
+        self.assertEqual(bank['legacy_speakers'], original['legacy_speakers'])
+        self.assertEqual(bank['custom_characters'], ['custom_narrator'])
+        self.assertEqual(self.editor.reference(row['voice_id']).read_bytes(), WAV)
+        self.assertTrue(next(r for r in self.editor.state()['characters'] if r['id'] == 'custom_narrator')['added'])
+        replaced = self.editor.prepare('custom_narrator', 'Changed words.', WAV)
+        self.editor.audition('custom_narrator', 'Hello.', replaced['id']); self.editor.apply(replaced['id'])
+        merged = preserve_custom_voices(self.root, self.editor.bank_root, self.original)
+        updated = load_bank(merged)
+        self.assertEqual(updated['custom_characters'], ['custom_narrator'])
+        self.assertEqual(updated['routes']['custom_narrator']['name'], 'My narrator')
+        self.assertEqual(updated['voices'][updated['routes']['custom_narrator']['voice_id']]['ref_text'], 'Changed words.')
+        with self.assertRaisesRegex(ValueError, 'already has a character'):
+            preserve_custom_voices(self.root, self.editor.bank_root, added_root)
+        self.editor.close()
+        self.editor = VoiceEditor(self.root / 'config.json')
+        self.assertIn('custom_narrator', self.editor.bank['routes'])
+        self.assertTrue((self.editor.workspace / self.editor.bank['voices'][self.editor.bank['routes']['custom_narrator']['voice_id']]['file']).is_file())
+        self.editor.undo()  # Replacement -> added voice.
+        self.assertEqual(self.editor.bank_root, added_root)
+        self.editor.undo()  # Added voice -> original pack.
+        self.assertNotIn('custom_narrator', self.editor.bank['routes'])
+        self.assertEqual(read_json(self.original / 'voice-pack.json'), original)
+
+    def test_new_voice_rejects_invalid_or_duplicate_identity_before_registration(self):
+        for identity, name in [('spike', 'New voice'), ('SPIKE', 'New voice'), ('custom_one', ' Spike '),
+                               ('../escape', 'Name'), ('a' * 65, 'Name'), ([], 'Name'),
+                               ('custom_one', ''), ('custom_one', 'x' * 101), ('custom_one', 'bad\nname'),
+                               ('custom_one', 123)]:
+            with self.subTest(identity=identity, name=name), self.assertRaises(ValueError):
+                self.editor.prepare(identity, 'Words.', WAV, name=name)
+        self.assertIsNone(self.editor.pending)
+        self.assertEqual(len(list((self.editor.workspace / 'voices').glob('*.breeze'))), 1)
+
     def test_external_reference_directory_requires_exact_hash(self):
         self.editor.reference_directory = self.root
         path = self.root / 'shared.wav'; path.write_bytes(WAV)

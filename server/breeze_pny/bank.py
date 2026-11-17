@@ -72,6 +72,10 @@ def load_bank(root):
     for character, voice in overrides.items():
         if character not in characters or characters[character]['voice_id'] != voice:
             raise ValueError('Personal voice mapping differs from character routing')
+    additions = data.get('custom_characters', [])
+    if (not isinstance(additions, list) or any(not isinstance(identity, str) for identity in additions)
+            or len(set(additions)) != len(additions) or any(identity not in overrides for identity in additions)):
+        raise ValueError('Invalid added character mapping')
     data['routes'] = characters
     return data
 

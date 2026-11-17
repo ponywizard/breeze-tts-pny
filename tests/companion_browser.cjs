@@ -65,6 +65,7 @@ function firstLine(stream) {
     await command('Emulation.setDeviceMetricsOverride', {width: 1200, height: 1300, deviceScaleFactor: 1, mobile: false});
     await command('Page.navigate', {url: info.url});
     await waitFor("document.getElementById('name')?.textContent === 'Derpy Hooves'");
+    assert.ok(await evaluate(`document.getElementById('api-address').textContent.includes(${JSON.stringify(new URL(info.url).hostname)})`), 'API address does not follow the browser host');
     await evaluate("document.querySelector('[data-tab=voices]').click()");
     assert.equal(await evaluate("document.querySelectorAll('#characters button').length"), 2);
     assert.ok(await evaluate("document.getElementById('source').textContent.includes('Season 2, episode 14')"));
@@ -186,6 +187,39 @@ function firstLine(stream) {
       await waitFor("!document.getElementById('replacement-audio').hidden && !busy");
       assert.ok(await evaluate('converted.size > 24000'), 'Compressed input was not decoded');
     }
+    // A new name adds a route without replacing either of the existing voices.
+    await evaluate("document.getElementById('add-voice').click(); document.getElementById('new-name').value = 'My narrator'; document.getElementById('new-name').dispatchEvent(new Event('input'))");
+    assert.equal(await evaluate("document.getElementById('new-id').value"), 'custom_my_narrator');
+    assert.equal(await evaluate("document.getElementById('current-reference').hidden"), true);
+    await command('DOM.setFileInputFiles', {nodeId: input.nodeId, files: [info.recording]});
+    await waitFor("!document.getElementById('replacement-audio').hidden && !busy");
+    await evaluate("document.getElementById('new-transcript').value = 'My own words.'; document.getElementById('new-transcript').dispatchEvent(new Event('input')); document.getElementById('try').click()");
+    await waitFor("!document.getElementById('apply').disabled && !busy");
+    await evaluate("document.getElementById('new-name').value = 'My narrator é <b>test</b>'; document.getElementById('new-name').dispatchEvent(new Event('input'))");
+    assert.equal(await evaluate("document.getElementById('apply').disabled"), true, 'Editing the name kept an old preview savable');
+    await evaluate("document.getElementById('new-id').value = 'custom_my_narrator'; document.getElementById('new-id').dispatchEvent(new Event('input')); document.getElementById('try').click()");
+    await waitFor("!document.getElementById('apply').disabled && !busy");
+    if (process.env.COMPANION_SCREENSHOTS) {
+      fs.mkdirSync(process.env.COMPANION_SCREENSHOTS, {recursive: true});
+      const capture = await command('Page.captureScreenshot', {format: 'png', captureBeyondViewport: true});
+      fs.writeFileSync(path.join(process.env.COMPANION_SCREENSHOTS, 'add-voice.png'), Buffer.from(capture.data, 'base64'));
+    }
+    await evaluate("document.getElementById('apply').click()");
+    await waitFor("!busy && document.getElementById('new-voice-fields').hidden");
+    assert.equal(await evaluate("document.querySelectorAll('#characters button').length"), 3);
+    assert.equal(await evaluate("document.getElementById('name').textContent"), 'My narrator é <b>test</b>');
+    assert.equal(await evaluate("document.querySelectorAll('#name b').length"), 0);
+    assert.equal(await evaluate("document.querySelectorAll('#voice option').length"), 3);
+    await evaluate("document.querySelector('[data-tab=generate]').click(); document.getElementById('voice').value = 'custom_my_narrator'; document.getElementById('voice').dispatchEvent(new Event('change'))");
+    await generateSample('custom_my_narrator', 3000);
+    await command('Page.reload');
+    await waitFor("document.querySelectorAll('#voice option').length === 3");
+    await evaluate("document.querySelector('[data-tab=voices]').click(); [...document.querySelectorAll('#characters button')].find(button => button.textContent.startsWith('My narrator')).click()");
+    assert.equal(await evaluate("document.getElementById('voice-id').textContent"), 'Voice ID: custom_my_narrator');
+    await evaluate("document.getElementById('undo').click()");
+    await waitFor("!busy && document.querySelectorAll('#voice option').length === 2");
+    assert.equal(await evaluate("state.characters.some(row => row.id === 'custom_my_narrator')"), false);
+    assert.equal(await evaluate("document.getElementById('name').textContent"), 'Derpy Hooves');
     await command('Emulation.setDeviceMetricsOverride', {width: 400, height: 900, deviceScaleFactor: 1, mobile: true});
     assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth'), 'Mobile layout overflows');
     await evaluate("document.querySelector('[data-tab=generate]').click()");
@@ -233,7 +267,7 @@ function firstLine(stream) {
       }
     }
     assert.deepEqual(errors.filter(error => !error.includes('ERR_ABORTED')), [], 'Browser console errors');
-    console.log('PASS: reference workflow and provenance, same-text voice switching, randomized/fixed seeds and persistence, delivery direction, Generate/autoplay/download, cancellation/recovery, shared model unload/load, mobile layout, reload');
+    console.log('PASS: named custom voice creation/generation/reload/undo, reference workflow and provenance, host-aware API address, same-text voice switching, randomized/fixed seeds and persistence, delivery direction, Generate/autoplay/download, cancellation/recovery, shared model unload/load, mobile layout, reload');
   } finally {
     if (socket) socket.close();
     if (browser) { browser.kill(); await new Promise(resolve => browser.once('exit', resolve)); }

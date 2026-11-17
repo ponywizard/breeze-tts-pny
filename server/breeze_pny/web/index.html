@@ -4,7 +4,7 @@
 <meta name="color-scheme" content="light"><title>Breeze Companion</title>
 <link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
 <body><main class="page">
-<header><div><h1>Breeze Companion <small id="version">0.3.1</small></h1></div><span id="engine" role="status">Connecting…</span></header>
+<header><div><h1>Breeze Companion <small id="version">0.3.2</small></h1></div><span id="engine" role="status">Connecting…</span></header>
 <nav class="tabs" aria-label="Companion"><button data-tab="generate" aria-current="page">Generate</button><button data-tab="voices">Voices</button><button data-tab="models">Models</button></nav>
 <p id="status" role="status" aria-live="polite">Opening your companion…</p>
 <section id="tab-generate">
@@ -18,18 +18,22 @@
 <div id="result" hidden><audio id="generated-audio" controls></audio><a id="download" download="breeze.wav">Download WAV</a><span id="result-label" class="muted"></span><p id="result-direction" class="muted" hidden></p></div></div></div>
 <details id="generate-provenance" hidden><summary>Reference source</summary><div id="generate-source" class="provenance"></div></details>
 </section>
-<section id="tab-voices" hidden><h2>Reference Manager</h2><p>Listen, try a replacement recording, then save or undo. Your files stay on this computer.</p>
+<section id="tab-voices" hidden><h2>Reference Manager</h2><p>Add a named voice or replace an existing reference. Preview it, then save or undo. Saved recordings are stored on the computer running Companion.</p>
 <div class="voice-layout">
-  <aside><label for="search">Find a character</label><input id="search" type="search" placeholder="Derpy, Twilight, Spike…"><p id="count" class="muted"></p><nav id="characters" aria-label="Characters"></nav></aside>
+  <aside><button id="add-voice">Add voice</button><label for="search">Find a voice</label><input id="search" type="search" placeholder="Derpy, Twilight, Spike…"><p id="count" class="muted"></p><nav id="characters" aria-label="Voices"></nav></aside>
   <section id="detail" hidden>
     <div class="title"><h2 id="name"></h2><span id="custom" class="badge" hidden>Personal reference</span></div>
-    <article><h3>Current reference</h3><blockquote id="transcript"></blockquote>
+    <div id="new-voice-fields" hidden><label for="new-name">Voice name</label><input id="new-name" maxlength="100" required placeholder="My narrator">
+      <label for="new-id">Voice ID</label><input id="new-id" maxlength="64" pattern="[A-Za-z0-9_\-]{1,64}" required aria-describedby="new-id-help">
+      <p id="new-id-help" class="muted">Filled from the name; you can change it. Use this ID as <code>character_id</code> in the TTS API. New voices use the base model and appear in Generate after saving.</p></div>
+    <p id="voice-id" class="muted"></p>
+    <article id="current-reference"><h3>Current reference</h3><blockquote id="transcript"></blockquote>
       <details class="reference-source" open><summary>Reference source</summary><div id="source" class="provenance"></div></details>
       <button id="reference" class="quiet">Listen to reference</button><audio id="current-audio" controls hidden></audio>
       <p id="missing" class="muted" hidden>This pack includes an encoded voice cache but no playable reference recording. You can still hear a generated preview below.</p>
     </article>
     <article><h3>Hear this voice</h3><label for="preview-text">Preview line</label><textarea id="preview-text" maxlength="600" rows="2">Hello! It is good to see you again. Would you like to come along?</textarea><button id="current-preview" class="quiet">Generate current voice preview</button><audio id="speech-audio" controls hidden></audio></article>
-    <article><h3>Replace reference</h3><p>Choose a clean recording with one speaker. Cut out music, other speakers, and long silences before importing.</p>
+    <article><h3 id="reference-heading">Replace reference</h3><p>Choose a clean recording with one speaker. Cut out music, other speakers, and long silences before importing.</p>
       <label for="file">Audio recording</label><input id="file" type="file" accept="audio/*,.wav,.flac,.mp3,.ogg,.m4a">
       <p id="file-info" class="muted">Audio formats depend on your browser. WAV is the most portable choice.</p>
       <div class="trim"><label>Start (seconds)<input id="start" type="number" value="0" min="0" step="0.01"></label><label>End (seconds)<input id="end" type="number" min="0" step="0.01"></label><button id="convert" class="quiet" disabled>Prepare selection</button></div>

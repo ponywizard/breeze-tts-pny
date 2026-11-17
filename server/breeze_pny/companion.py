@@ -22,6 +22,7 @@ class Companion(VoiceEditor):
         self.native_port_override = native_port or self.config['native_port']
         self.native_port = self.native_port_override
         self.api_port = self.config['port']
+        self.api_host = self.config.get('host', '127.0.0.1')
         self.native_log_prefix = 'native'
         self.stopping = threading.Event()
         self.cancel_download = threading.Event()
@@ -127,7 +128,7 @@ class Companion(VoiceEditor):
             return {**data, 'version': __version__, 'models': models, 'ready': self.healthy(),
                     'phase': self.phase, 'error': self.error, 'job': copy.deepcopy(self.job),
                     'voice_pack': self.bank['id'], 'autoload': self.config.get('autoload', True),
-                    'api_port': self.api_port, 'speech_busy': self.router.lock.locked()}
+                    'api_host': self.api_host, 'api_port': self.api_port, 'speech_busy': self.router.lock.locked()}
 
     def apply(self, pending_id):
         with self._metadata:

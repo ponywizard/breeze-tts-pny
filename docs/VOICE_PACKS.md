@@ -27,6 +27,8 @@ For custom voices, register a reference and exact transcript with the compatible
 
 For a guided local replacement, use the [voice library](VOICE_LIBRARY.md). Packs may also include `reference_file` for each voice: an inventoried WAV whose file hash equals `reference_sha256`. Export with `--include-reference-audio` to make original references playable in the library. Personal packs record selected overrides in `custom_voices`; the installer reapplies these during updates.
 
+Companion 0.3.2 adds [named custom voices in Companion](COMPANION.md#add-a-custom-voice). Personal packs also record added character IDs in `custom_characters`, a unique list whose entries must have matching `custom_voices` mappings. These routes, names, caches and reference recordings are carried into updated curated packs. An ID collision with a new curated route stops the update. Added voices use the base model with no adapter; replacing a curated reference keeps its existing route settings.
+
 ## Native patch and licensing
 
 The selected runtime is [Breeze-TTS-2.cpp v0.1.6](https://github.com/HoppouAI/Breeze-TTS-2.cpp/tree/v0.1.6), revision `87b43667ca5597f826441991e416a279ed7373b9`, with the included per-request LoRA patch. The model stays resident and adapters are selected per utterance; the build uses one generation slot. The published stock binary alone does not provide this patch's adapter acknowledgement contract.

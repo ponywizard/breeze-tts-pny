@@ -173,6 +173,26 @@ class CompanionChecks(unittest.TestCase):
         self.call('POST', '/tts', {'character_id': 'derpy_hooves', 'text': 'Hello.'})
         self.assertEqual(self.fixture.native.last_voice, 'shared')
 
+    def test_add_voice_over_http_makes_it_immediately_available_to_router(self):
+        code, raw = self.call('POST', '/api/prepare', {'character': 'custom_narrator', 'name': 'My narrator',
+            'transcript': 'New words.', 'wav': base64.b64encode(WAV).decode()})
+        self.assertEqual(code, 200, raw); pending = json.loads(raw)['id']
+        self.assertEqual(self.call('POST', '/api/audition', {'character': 'custom_narrator', 'text': 'Hello.', 'pending_id': pending})[0], 200)
+        code, raw = self.call('POST', '/api/apply', {'pending_id': pending})
+        self.assertEqual(code, 200, raw)
+        self.assertIn('custom_narrator', [row['id'] for row in json.loads(raw)['characters']])
+        self.assertIs(self.app.router.bank, self.app.bank)
+        code, raw = self.call('POST', '/tts', {'character_id': 'custom_narrator', 'text': 'Hello.'})
+        self.assertEqual(code, 200, raw); self.assertEqual(raw[:4], b'RIFF')
+        self.assertEqual(self.fixture.native.last_voice, self.app.bank['routes']['custom_narrator']['voice_id'])
+        self.assertTrue(self.app.router.lock.acquire(timeout=2)); self.app.router.lock.release()
+        self.job('unload'); self.job('load', 'q4_k')
+        self.assertEqual(self.call('POST', '/tts', {'character_id': 'custom_narrator', 'text': 'Hello again.'})[0], 200)
+        self.assertTrue(self.app.router.lock.acquire(timeout=2)); self.app.router.lock.release()
+        self.assertEqual(self.call('POST', '/api/undo', {})[0], 200)
+        self.assertNotIn('custom_narrator', self.app.router.bank['routes'])
+        self.assertEqual(self.call('POST', '/tts', {'character_id': 'custom_narrator', 'text': 'Hello.'})[0], 400)
+
     def test_download_can_run_alongside_speech_and_cancels_without_final_file(self):
         started = threading.Event()
         def download(*args, cancelled, **kwargs):
@@ -224,6 +244,8 @@ class InstallerChecks(unittest.TestCase):
                 prepared = app.prepare('derpy_hooves', 'Personal reference.', WAV)
                 app.audition('derpy_hooves', 'Hello.', prepared['id']); app.apply(prepared['id'])
                 voice = app.bank['routes']['derpy_hooves']['voice_id']
+                added = app.prepare('custom_narrator', 'My words.', WAV, name='My narrator')
+                app.audition('custom_narrator', 'Hello.', added['id']); app.apply(added['id'])
                 app.unload_model(); app.close()
                 write_json(fixture.root / 'installation.json', {'schema':1, 'complete':True, 'version':'0.2.1'})
                 runtime = fixture.root / 'runtime'; runtime.mkdir()
@@ -244,6 +266,8 @@ class InstallerChecks(unittest.TestCase):
                 bank = read_json(fixture.root / installed['voice_pack'] / 'voice-pack.json')
                 self.assertEqual(bank['custom_voices']['derpy_hooves'], voice)
                 self.assertEqual((fixture.root/installed['voice_pack']/bank['voices'][voice]['reference_file']).read_bytes(), WAV)
+                self.assertEqual(bank['custom_characters'], ['custom_narrator'])
+                self.assertEqual(next(row['name'] for row in bank['characters'] if row['id'] == 'custom_narrator'), 'My narrator')
                 args.model = 'q8_0'
                 with patch.object(installer,'read_json',side_effect=read), patch.object(installer,'bundle',side_effect=lambda src,digest,prefix,category: runtime if category=='runtimes' else fixture.root/'assets/voice-packs/stock'), patch.object(installer.subprocess,'run'):
                     installer.install(args)
