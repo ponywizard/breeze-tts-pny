@@ -1,6 +1,6 @@
 # Linux companion installation
 
-The companion runs Breeze-TTS-2, selects each character's reference and adapter, and streams speech to the game mod. The curated pack has 139 reference voices and six Mane Six adapters. One pinned Q8 model and the adapters stay resident; synthesis uses one slot.
+The companion runs Breeze-TTS-2, selects each character's reference and adapter, and streams speech to the game mod. The curated pack has 139 reference voices and six Mane Six adapters. One selected model and the adapters stay resident; synthesis uses one slot. Q8 is the default. The browser UI also manages F16, Q6, Q4 and three experimental variants.
 
 For Windows, use [the Windows package](WINDOWS.md), which includes Python and the game mod.
 
@@ -15,8 +15,8 @@ For Windows, use [the Windows package](WINDOWS.md), which includes Python and th
 
 Download these matching release files:
 
-- `breeze-tts-pny-server-0.2.1-linux-x86_64.tar.gz`
-- `breeze-pny-curated-voices-20261107.tar.gz`
+- `breeze-tts-pny-server-0.3.0-linux-x86_64.tar.gz`
+- `breeze-pny-curated-voices-20261115.tar.gz`
 - `breeze_tts_pny-0.1.3-linux-x86_64.pck` for the game
 
 `SERVER-SHA256SUMS` records the companion/voice archive hashes; `SHA256SUMS` records the game-pack hash. The native runtime is included in the companion archive.
@@ -24,8 +24,8 @@ Download these matching release files:
 Extract the server archive, put the voice-pack `.tar.gz` inside the extracted folder alongside `installer/`, and leave the voice pack compressed:
 
 ```bash
-tar -xzf breeze-tts-pny-server-0.2.1-linux-x86_64.tar.gz
-cd breeze-tts-pny-server-0.2.1-linux-x86_64
+tar -xzf breeze-tts-pny-server-0.3.0-linux-x86_64.tar.gz
+cd breeze-tts-pny-server-0.3.0-linux-x86_64
 # Copy the downloaded voice archive into this directory before continuing.
 breeze_pny_prefix="${XDG_DATA_HOME:-$HOME/.local/share}/breeze-tts-pny"
 python3 installer/install.py --prefix "$breeze_pny_prefix"
@@ -33,9 +33,15 @@ python3 installer/install.py --prefix "$breeze_pny_prefix"
 
 Setup verifies the runtime, imports the voices/adapters, downloads and verifies the model, and prints the exact start command. Transfer progress and checksum verification are shown in the terminal. Use `--prefix /your/path` for another location or `--python /path/to/python3` to choose another Python 3.11+ interpreter. Keep that interpreter available after setup.
 
-For an offline model, add `--model-file /path/to/breeze-tts-2-q8_0.gguf`. The hash must match the pinned model. Verified installed files are reused; a failed download leaves verified assets intact. Downloads restart from the beginning on retry.
+For an offline model, add `--model-file /path/to/breeze-tts-2-q8_0.gguf`. The hash must match the selected catalog model. Use `--model f16`, `--model q6_k` or `--model q4_k` to select another variant at installation; the default is Q8. Verified installed files are reused; a failed download leaves verified assets intact. Downloads restart from the beginning on retry.
 
 The voice archive may also be beside the extracted server folder. Custom locations use `--voice-pack` or `--runtime-bundle`; HTTPS URLs also require their corresponding `--voice-pack-sha256` or `--runtime-sha256`. A release base URL can be supplied with `--release-base-url`.
+
+## Browser UI and standalone generation
+
+Use the installed launcher with `serve --web`. This opens **Breeze Companion**, with Generate, Voices and Models tabs, and also serves the usual game API. The game is optional. Use the full link printed in the terminal, including its session token. `--no-browser` only prints the link; `--web-port 19093` changes the UI port. The UI binds to loopback even if the game API uses another host.
+
+See [the Companion guide](COMPANION.md) for model downloads, switching, unloading, speech downloads and reference editing. Close any separately running companion or old voice-library utility first; one process owns an installation. Ctrl+C stops it.
 
 ## Run and connect
 
@@ -63,7 +69,7 @@ breeze_pny_prefix="${XDG_DATA_HOME:-$HOME/.local/share}/breeze-tts-pny"
 
 Listen to the saved WAV files and check the reported adapter (`pinkie` or `base`). Without `--output`, the check validates the stream and reports timings without saving or playing audio. `voices` lists character IDs.
 
-To browse references or replace one, stop the companion and run the installed launcher with `voice-library`. The [local browser wizard](VOICE_LIBRARY.md) converts audio, generates previews, saves validated personal packs, and supports undo.
+For reference playback and replacement, use **Voices** in `serve --web`. Saved changes apply immediately to both generation and the API. The older `voice-library` command remains available as a separate utility; it requires stopping the companion first. See [reference editing](VOICE_LIBRARY.md).
 
 ## Ports and startup problems
 
@@ -99,7 +105,7 @@ breeze_pny_prefix="${XDG_DATA_HOME:-$HOME/.local/share}/breeze-tts-pny"
 python3 installer/install.py --prefix "$breeze_pny_prefix" --update
 ```
 
-Host/ports are preserved and the previous configuration is saved as `config.previous.json`. The installer refuses an active installation and verifies the new files before activation. Old versioned assets/application folders remain for inspection; automatic cleanup and a rollback command are not provided. Update the game `.pck` separately and restart the game.
+The selected model, automatic-load preference and host/ports are preserved and the previous configuration is saved as `config.previous.json`. The installer refuses an active installation and verifies the new files before activation. Old versioned assets/application folders remain for inspection; automatic cleanup and a rollback command are not provided. Update the game `.pck` separately and restart the game.
 
 Each run saves `logs/companion-*.jsonl` and its matching `logs/native-*.log`. The JSON log records status, character IDs, adapters and timings, without speech text or audio. Native/game logs can contain local paths, and game logs can contain conversations; review them before sharing. Nothing uploads automatically.
 

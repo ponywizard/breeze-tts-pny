@@ -20,4 +20,14 @@ Global Ponese and disabled-TTS settings still take precedence. Other providers a
 
 The full game archive reports base project version `0.3.1-maredev`; its cumulative patch reports `0.3.1.2-maredev` through `world/debug/version.gd`. Validation and the optional Windows playtest helper check that effective version. Validation stages both official packs and the cumulative update, so an older base cannot silently stand in for the targeted release.
 
-The companion protocol, model, curated voice pack and LoRA adapters are unchanged. This is a game-mod update; the existing companion 0.2.1 installation remains usable.
+The mod and companion have independent versions. Game mod 0.1.3 continues to work with the published companion 0.2.1 and with Breeze Companion 0.3.0. The latter includes the browser UI, model management, reviewed cues and new Pinkie profile.
+
+## Companion UI and model ownership
+
+`serve --web` holds one installation lock through `Companion`, which extends the reference editor's staging/undo workflow. The game API listener and a separate loopback-only management listener share one `Router` and one native renderer. The management listener uses Host/Origin checks and a session token; its privileged endpoints are not added to the game-facing listener.
+
+Generation, reference preparation/preview/activation and model load/unload/delete use the router's single operation lock. Model downloads run independently and expose job progress. Loading validates the catalog hash and dependencies before unloading the working model, then checks all native voice metadata before saving the selected model. Failure attempts to restart the previous model. Management and health listeners remain up while the native process changes.
+
+`models.py` pins all seven hashes, byte sizes and one upstream revision. Voice-pack compatibility accepts exact legacy model pins or the explicitly enumerated quantizations of the same base/codec family. This is separate from checking the selected model's file integrity. The installer preserves the selected catalog variant, ports and auto-load setting across updates, and reuses the existing personal-reference migration checks.
+
+The browser uses the same `/tts` implementation as API clients. Its Cancel button aborts that HTTP request, allowing the existing disconnect watcher to cancel native synthesis. Reference previews use the same native PCM reader and playback conversion. Applying or undoing a reference updates the shared router's bank immediately.

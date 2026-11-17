@@ -22,10 +22,12 @@ def get(url, timeout=3):
         return json.loads(response.read(4 * 1024**2))
 
 
-def check_port(host, port, name, wait_seconds=0):
+def check_port(host, port, name, wait_seconds=0, stopping=None):
     deadline = time.monotonic() + wait_seconds
     announced = False
     while True:
+        if stopping is not None and stopping.is_set():
+            raise InterruptedError('Companion is stopping')
         # Windows SO_REUSEADDR can bind over a live listener. Check it before
         # the reusable bind probe; never claim an existing service is free.
         if os.name == 'nt':
@@ -53,9 +55,9 @@ def check_port(host, port, name, wait_seconds=0):
             raise ValueError(f'{name} port {host}:{port} is unavailable: {error}') from error
 
 
-def inspect(config_path, dependencies=True):
+def inspect(config_path, dependencies=True, *, config=None, model_required=True):
     config_path = Path(config_path).resolve()
-    config = read_json(config_path)
+    config = read_json(config_path) if config is None else dict(config)
     if config.get('schema') != 1: raise ValueError('Unsupported server configuration')
     target = platform_id()
     root = config_path.parent
@@ -77,10 +79,12 @@ def inspect(config_path, dependencies=True):
         if probe.returncode or '--lora' not in probe.stdout + probe.stderr:
             raise ValueError('Native runtime cannot start on this system: ' + (probe.stderr or probe.stdout)[-2000:])
     model = relative(root, config['model'])
-    if sha(model) != config['model_sha256']: raise ValueError('Breeze model hash mismatch')
+    if model_required and sha(model) != config['model_sha256']: raise ValueError('Breeze model hash mismatch')
     bank_root = relative(root, config['voice_pack'])
     bank = load_bank(bank_root)
-    if bank['model_sha256'] != config['model_sha256']: raise ValueError('Voice pack requires a different base model')
+    from .models import compatible
+    if not compatible(bank['model_sha256'], config['model_sha256']):
+        raise ValueError('Voice pack requires a different base model')
     if dependencies and not ctypes.util.find_library('vulkan-1' if os.name == 'nt' else 'vulkan'):
         raise ValueError('Install the Vulkan loader and GPU driver')
     return config, root, runtime, binary, model, bank_root, bank

@@ -9,7 +9,7 @@ PUBLIC_DOCUMENTS = (
     'docs/ARCHITECTURE.md', 'docs/BUILD.md', 'docs/PROTOCOL.md', 'docs/COLAB.md',
     'docs/SERVER.md', 'docs/SERVER_VALIDATION.md', 'docs/VALIDATION.md',
     'docs/VOICE_PACKS.md', 'docs/VOICE_LIBRARY.md', 'docs/WINDOWS.md', 'docs/WINDOWS-BUILD.md',
-    'docs/VOICE_UPDATES.md',
+    'docs/VOICE_UPDATES.md', 'docs/COMPANION.md',
     'colab/Home_Equestria_Breeze_Voices.ipynb',
 )
 

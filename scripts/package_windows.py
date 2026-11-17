@@ -55,12 +55,16 @@ def main():
           'set "result=%errorlevel%"\npopd\nif not "%BREEZE_PNY_NO_PAUSE%"=="1" pause\nexit /b %result%\n')
     batch('start-companion.cmd', 'pushd "%~dp0" || exit /b 1\nif not exist "companion\\bin\\breeze-pny.cmd" (\n'
           '  echo Run setup.cmd first.\n  pause\n  exit /b 1\n)\n'
-          'call "companion\\bin\\breeze-pny.cmd" serve\n'
+          'call "companion\\bin\\breeze-pny.cmd" serve %*\n'
           'set "result=%errorlevel%"\npopd\nif not "%BREEZE_PNY_NO_PAUSE%"=="1" pause\nexit /b %result%\n')
     batch('check-voice.cmd', 'pushd "%~dp0" || exit /b 1\n"python\\python.exe" -X utf8 "check-voice.py" %*\n'
           'set "result=%errorlevel%"\npopd\nif not "%BREEZE_PNY_NO_PAUSE%"=="1" pause\nexit /b %result%\n')
     batch('voice-library.cmd', 'pushd "%~dp0" || exit /b 1\n'
           'call "companion\\bin\\breeze-pny.cmd" voice-library %*\n'
+          'set "result=%errorlevel%"\npopd\nif not "%BREEZE_PNY_NO_PAUSE%"=="1" pause\nexit /b %result%\n')
+    batch('breeze-companion.cmd', 'pushd "%~dp0" || exit /b 1\n'
+          'if not exist "companion\\bin\\breeze-pny.cmd" (\n  echo Run setup.cmd first.\n  pause\n  exit /b 1\n)\n'
+          'call "companion\\bin\\breeze-pny.cmd" serve --web %*\n'
           'set "result=%errorlevel%"\npopd\nif not "%BREEZE_PNY_NO_PAUSE%"=="1" pause\nexit /b %result%\n')
     batch('prepare-playtest.cmd', 'pushd "%~dp0" || exit /b 1\n'
           '"python\\python.exe" -X utf8 "installer\\prepare_windows_playtest.py" %*\n'
@@ -71,12 +75,13 @@ sys.path.insert(0,str(Path(__file__).resolve().parent / "server"))
 sys.argv[1:1]=["smoke"]
 runpy.run_module("breeze_pny",run_name="__main__")
 '''
-    files['START-HERE.txt'] = b'''Windows x86_64 companion preview.
+    files['START-HERE.txt'] = b'''Breeze Companion 0.3.0 for Windows x86_64.
 Earlier native releases were tested in flatscreen; see docs/VALIDATION.md.
 Windows PCVR is untested and ships with case-by-case support.
 Read docs/WINDOWS.md for setup, requirements and test coverage.
 Place the curated voice-pack archive beside this folder or inside it.
-Run setup.cmd, then start-companion.cmd. Wait for the ready event.
+Run setup.cmd, then breeze-companion.cmd for Generate, Voices and Models.
+For API-only use, run start-companion.cmd. Wait for the ready event.
 Run check-voice.cmd --character pinkie_pie --output pinkie-test.wav
 Copy the .pck from game-mod into Settings > Mods > Open mods folder, then restart.
 Set MOSS-compatible TTS to http://127.0.0.1:18792/tts with automatic voices.

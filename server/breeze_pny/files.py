@@ -57,7 +57,7 @@ def verify_files(root, inventory):
             raise ValueError('Missing or changed asset: ' + name)
 
 
-def acquire(source, destination, digest, max_bytes=5 * 1024**3, *, progress=None):
+def acquire(source, destination, digest, max_bytes=5 * 1024**3, *, progress=None, cancelled=None):
     """Copy or download atomically; never install an unverified partial file."""
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -83,6 +83,8 @@ def acquire(source, destination, digest, max_bytes=5 * 1024**3, *, progress=None
         phase = 'downloading' if str(source).startswith('https://') else 'copying'
         with stream, temporary.open('wb') as output:
             while chunk := stream.read(1024 * 1024):
+                if cancelled and cancelled.is_set():
+                    raise InterruptedError('Download cancelled')
                 total += len(chunk)
                 if total > max_bytes:
                     raise ValueError('Asset exceeds size limit')
@@ -93,6 +95,8 @@ def acquire(source, destination, digest, max_bytes=5 * 1024**3, *, progress=None
         if progress: progress('verifying', total, total)
         if sha(temporary) != digest:
             raise ValueError('Asset checksum mismatch for ' + destination.name)
+        if cancelled and cancelled.is_set():
+            raise InterruptedError('Download cancelled')
         temporary.replace(destination)
         if progress: progress('ready', total, total)
         return destination

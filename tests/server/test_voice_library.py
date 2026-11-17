@@ -72,7 +72,8 @@ class FakeNative(BaseHTTPRequestHandler):
             self.send_header('X-Sample-Format', 's16le'); self.send_header('X-Sample-Rate', '24000')
             self.send_header('X-Breeze-Adapter', fields.get('lora', [''])[0] or 'base')
             self.send_header('Content-Length', '24000'); self.end_headers()
-            self.wfile.write(struct.pack('<h', 3000) * 12000)
+            sample = getattr(self.server, 'voice_samples', {}).get(fields['voice_id'][0], 3000)
+            self.wfile.write(struct.pack('<h', sample) * 12000)
 
 
 class VoiceLibraryChecks(unittest.TestCase):

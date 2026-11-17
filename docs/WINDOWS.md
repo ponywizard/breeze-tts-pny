@@ -4,12 +4,16 @@ This package targets Windows 10/11 x86_64 and Home: Equestria `0.3.1.2-maredev` 
 
 Game mod **0.1.3** is shipping for **Windows user playtesting**, in flatscreen and PCVR. It has not been personally playtested on Windows with game 0.3.1.2. Earlier 0.1.1 native flatscreen playtesting passed on an RX 6700 XT; that is historical coverage. [Validation details](VALIDATION.md) record the distinction.
 
+## Breeze Companion UI
+
+After setup, run **`breeze-companion.cmd`** for Generate, Voices and Models. The browser and the game API share the loaded model. You can use the companion without the game. `start-companion.cmd` remains the API-only launcher; close one before starting the other. [Complete UI guide](COMPANION.md).
+
 ## Install the companion
 
-1. Download `breeze-tts-pny-0.2.1-windows-x86_64.zip` and `breeze-pny-curated-voices-20261107.tar.gz` from [companion release 0.2.1](https://github.com/ponywizard/breeze-tts-pny/releases/tag/v0.2.1). Also download `breeze_tts_pny-0.1.3-windows-x86_64.pck` from the [current mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3); the ZIP contains an older 0.1.1 pack. `WINDOWS-SHA256SUMS` records the expected download hashes.
+1. Download `breeze-tts-pny-0.3.0-windows-x86_64.zip` and `breeze-pny-curated-voices-20261115.tar.gz` from the same 0.3.0 release package. The ZIP includes game mod `breeze_tts_pny-0.1.3-windows-x86_64.pck`; it is also available from the [mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3). `WINDOWS-SHA256SUMS` records the expected download hashes.
 2. Extract the ZIP to a user-owned folder, such as `C:\BreezePNY`. Place the voice-pack `.tar.gz` **inside that extracted folder**, alongside `setup.cmd`. Leave the voice pack compressed. Keep the folder in its intended location before setup.
 3. Run `setup.cmd`. The companion installs in the folder's `companion` subdirectory. Setup copies the voices and adapters, downloads the pinned Q8 model (about 3.6 GB), and verifies the files. Allow at least 6 GB of free space and keep the setup window open until it finishes. Progress and checksum verification are shown in the terminal.
-4. Run `start-companion.cmd`. Wait for the `ready` event. Leave this window open while playing; Ctrl+C stops the companion and its owned native process.
+4. Run `breeze-companion.cmd` for the UI, or `start-companion.cmd` for API-only operation. Wait for the model to be ready. Leave this window open while playing; Ctrl+C stops the companion and its owned native process.
 
 If you already have the matching model, open a terminal in the extracted folder and use:
 
@@ -17,7 +21,7 @@ If you already have the matching model, open a terminal in the extracted folder 
 .\setup.cmd --model-file "C:\path\to\breeze-tts-2-q8_0.gguf"
 ```
 
-The file must match the release's pinned SHA-256. A previously verified installed model is reused. Failed downloads leave verified assets intact; downloads restart from the beginning when retried.
+The file must match the selected catalog model’s pinned SHA-256. Add `--model f16`, `--model q6_k` or `--model q4_k` to select another initial model; Q8 is the default. A previously verified installed model is reused. Failed downloads leave verified assets intact; downloads restart from the beginning when retried.
 
 ## Install and configure the game mod
 
@@ -41,13 +45,13 @@ With the companion running, open a second terminal in the extracted folder:
 
 Listen to the WAV files. The first command should report adapter `pinkie`, and the second `base`. These checks work without an LLM or STT service.
 
-To browse references or replace a character's voice, stop the companion and run `voice-library.cmd`. The [voice library](VOICE_LIBRARY.md) handles audio conversion, previews, saving, and undo in a local browser.
+To browse or replace a reference, use **Voices** in Breeze Companion. The [voice library](VOICE_LIBRARY.md) handles audio conversion, previews, saving and undo. Saved changes apply immediately. The separate legacy `voice-library.cmd` utility still requires stopping the companion first.
 
-The published companion 0.2.1 ZIP bundles the older 0.1.1 game mod and a playtest helper for game 0.3.0. For normal installation, use the 0.1.3 replacement pack through the game’s Mods folder and skip that older helper. Companion model/runtime/voice assets are unchanged.
+When upgrading from the published 0.2.1 ZIP, replace its older 0.1.1 game mod with the included 0.1.3 pack. Keep only one Breeze game pack installed. The 0.3.0 companion adds the new Pinkie voice pack and model selection; the native runtime remains the same.
 
 ## Optional isolated playtest
 
-Use this only when you want a disposable profile instead of your normal game saves. For game 0.3.1.2, first replace `installer/prepare_windows_playtest.py` in the companion bundle with the [updated helper](https://github.com/ponywizard/breeze-tts-pny/blob/mod-v0.1.3/installer/prepare_windows_playtest.py), and replace the older `.pck` in its `game-mod` folder with 0.1.3. Then extract a fresh supported Windows game release and run:
+Use this only when you want a disposable profile instead of your normal game saves. The 0.3.0 bundle contains the updated helper and 0.1.3 game pack. Extract a fresh supported Windows game release and run:
 
 ```powershell
 .\prepare-playtest.cmd "C:\path\to\fresh\game"
@@ -71,6 +75,6 @@ The companion writes matching `companion-*.jsonl` and `native-*.log` files under
 
 ## Updates and removal
 
-Stop the companion before updating. Extract the next ZIP, keep the voice archive available, and run `setup.cmd --prefix "C:\path\to\existing\companion" --update` from the new extracted folder, or replace the package files in the same extracted folder and run `setup.cmd --update`. Setup preserves host/port choices and retains the previous configuration and older versioned assets.
+Stop the companion before updating. Extract the next ZIP, keep the voice archive available, and run `setup.cmd --prefix "C:\path\to\existing\companion" --update` from the new extracted folder, or replace the package files in the same extracted folder and run `setup.cmd --update`. Setup preserves the selected model, automatic-load preference, host/port choices and compatible personal references, and retains the previous configuration and older versioned assets.
 
 The game `.pck` is updated separately: replace the prior `.pck` and restart. To remove it, disable it in Settings → Mods or remove that file, then restart. No save migration is needed. Stop the companion before deleting its installation folder.

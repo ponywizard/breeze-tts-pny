@@ -1,6 +1,6 @@
-# Reviewed voice update: companion 0.2.2
+# Reviewed voice updates included in companion 0.3.0
 
-This source update carries the behavior selected during the November 15 listening tests into the portable companion. It is prepared locally; no release is published by updating this checkout.
+Breeze Companion 0.3.0 carries the behavior selected during the November 15 listening tests into the portable companion. Originally prepared as 0.2.2, these changes ship with the combined Breeze Companion release.
 
 ## Vocal expressions
 

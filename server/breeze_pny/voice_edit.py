@@ -145,6 +145,13 @@ class VoiceEditor:
             raise
 
     def close(self):
+        self.stop_native()
+        if self.work is not None:
+            self.work.cleanup()
+            self.work = None
+        self.lock.close()
+
+    def stop_native(self):
         if self.child is not None:
             self.child.terminate()
             try:
@@ -156,10 +163,6 @@ class VoiceEditor:
         if self.log is not None:
             self.log.close()
             self.log = None
-        if self.work is not None:
-            self.work.cleanup()
-            self.work = None
-        self.lock.close()
 
     def unchanged(self):
         if read_json(self.config_path) != self.config:
@@ -195,22 +198,34 @@ class VoiceEditor:
                 raise RuntimeError('Breeze stopped; close and reopen the voice library. Check the voice-library native log.')
             return
         self.unchanged()
-        config, root, runtime, binary, model, _, _ = inspect(self.config_path)
-        with socket.socket() as probe:
-            probe.bind(('127.0.0.1', 0))
-            self.native_port = probe.getsockname()[1]
+        config, root, runtime, binary, model, _, _ = inspect(
+            self.config_path, config=getattr(self, 'runtime_config', None))
+        if getattr(self, 'native_port_override', None):
+            from .service import check_port
+            self.native_port = self.native_port_override
+            check_port('127.0.0.1', self.native_port, 'Native Breeze', wait_seconds=75,
+                       stopping=getattr(self, 'stopping', None))
+        else:
+            with socket.socket() as probe:
+                probe.bind(('127.0.0.1', 0))
+                self.native_port = probe.getsockname()[1]
         command = [str(binary), str(model), '--host', '127.0.0.1', '--port', str(self.native_port),
                    '--ws-port', '-1', '--parallel', '1', '--voices-dir', str(self.workspace / 'voices')]
         for adapter, filename in self.bank.get('adapters', {}).items():
             command += ['--lora', adapter + '=' + str(relative(self.bank_root, filename))]
         logs = root / 'logs'
         logs.mkdir(exist_ok=True)
-        path = logs / ('voice-library-' + uuid.uuid4().hex + '.log')
+        path = logs / (getattr(self, 'native_log_prefix', 'voice-library') + '-' + uuid.uuid4().hex + '.log')
         self.log = path.open('x')
         self.child = subprocess.Popen(command, cwd=root, env=runtime_environment(binary), stdin=subprocess.DEVNULL,
                                       stdout=self.log, stderr=subprocess.STDOUT)
+        if getattr(self, 'native_log_prefix', None):
+            from .events import event
+            event('loading', native_log=str(path), native_pid=self.child.pid)
         deadline = time.monotonic() + 240
         while time.monotonic() < deadline:
+            if getattr(self, 'stopping', None) and self.stopping.is_set():
+                raise InterruptedError('Companion is stopping')
             if self.child.poll() is not None:
                 raise RuntimeError('Breeze could not start; inspect ' + str(path))
             try:
@@ -268,7 +283,7 @@ class VoiceEditor:
                         'source': source.strip(), 'auditioned': False, 'output_speed': output_speed}
         return {'id': self.pending['id'], 'seconds': (len(raw) - 44) / 48000, 'transcript': transcript}
 
-    def audition(self, character, text, pending_id=None):
+    def audition(self, character, text, pending_id=None, watch=None):
         if character not in self.bank['routes']:
             raise ValueError('Choose a known character')
         if not isinstance(text, str) or not 1 <= len(text.strip()) <= 600:
@@ -280,8 +295,13 @@ class VoiceEditor:
                 raise ValueError('Prepare this replacement again before previewing')
             row['voice_id'] = pending['voice']
         self.start_native()
-        with NativePCM(self.native_port, row, text.strip()) as reader:
-            pcm = b''.join(reader.chunks())
+        reader = NativePCM(self.native_port, row, text.strip())
+        cleanup = watch(reader) if watch else lambda: None
+        try:
+            with reader:
+                pcm = b''.join(reader.chunks())
+        finally:
+            cleanup()
         if pending_id:
             pending['auditioned'] = True
         return pcm_wav(pcm)
@@ -319,7 +339,8 @@ class VoiceEditor:
         receipt = read_json(path)
         previous = relative(self.prefix, receipt['previous_voice_pack'])
         bank = load_bank(previous)
-        if bank['model_sha256'] != self.config['model_sha256']:
+        from .models import compatible
+        if not compatible(bank['model_sha256'], self.config['model_sha256']):
             raise ValueError('The previous voice pack requires a different model')
         config = {**self.config, 'voice_pack': previous.relative_to(self.prefix).as_posix()}
         write_json(self.config_path, config)

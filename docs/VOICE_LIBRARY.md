@@ -1,5 +1,13 @@
 # Voice library
 
+## Breeze Companion 0.3.0
+
+The **Voices** tab in `breeze-pny serve --web` (Windows: `breeze-companion.cmd`) integrates this reference workflow with speech generation and model management. It shares the loaded model and one synthesis slot with the game API. Save and Undo apply immediately; keep the companion running. Load a model from Models before preparing or auditioning a reference. Existing reference playback works even with the model unloaded.
+
+The new curated pack includes all 139 playable reference WAVs, including Pinkie’s slowed reference. The steps below also describe the separate legacy utility; instructions to stop/restart the companion apply only to that separate utility.
+
+## Separate utility
+
 Reference Management Utility version **0.1.0**, distributed as a separate prerelease compatible with companion **0.2.1**. Download the combined ZIP and its SHA-256 file from [the utility release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/reference-manager-v0.1.0).
 
 The local browser wizard lets you browse every character, listen to available reference recordings, generate speech previews, and replace a reference without editing JSON or checksums. It uses the installed Breeze model and runtime. No FFmpeg, pip packages, cloud service, or model training is required.

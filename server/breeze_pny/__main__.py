@@ -63,6 +63,10 @@ def main():
         sub = commands.add_parser(name); sub.add_argument('--config', type=Path, default=os.environ.get('BREEZE_PNY_CONFIG'))
         if name == 'serve':
             sub.add_argument('--host'); sub.add_argument('--port', type=int); sub.add_argument('--native-port', type=int)
+            sub.add_argument('--web', action='store_true', help='Open Breeze Companion: Generate, Voices and Models')
+            sub.add_argument('--web-port', type=int, default=18793)
+            sub.add_argument('--no-browser', action='store_true')
+            sub.add_argument('--reference-directory', type=Path)
     sub = commands.add_parser('voice-library', help='Open the local reference browser and replacement wizard')
     from . import REFERENCE_MANAGER_VERSION
     sub.add_argument('--version', action='version', version='Reference Management Utility ' + REFERENCE_MANAGER_VERSION)
@@ -76,7 +80,11 @@ def main():
     args = parser.parse_args()
     if args.action != 'smoke' and args.config is None: parser.error('Supply --config or use the installed launcher')
     try:
-        if args.action == 'serve': serve(args.config, args.host, args.port, args.native_port)
+        if args.action == 'serve':
+            if args.web:
+                from .web import run
+                run(args.config, args.host, args.port, args.native_port, args.web_port, not args.no_browser, args.reference_directory)
+            else: serve(args.config, args.host, args.port, args.native_port)
         elif args.action == 'voice-library':
             from .voice_library import run
             run(args.config, args.port, args.reference_directory, not args.no_browser)

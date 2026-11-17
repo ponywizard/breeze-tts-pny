@@ -10,7 +10,7 @@ Every route must be `breeze`; retired or unknown routes are rejected. Use `--id`
 
 The companion accepts schema 1 and 2. Schema 2 is required when any route uses playback-speed conversion, and requires companion 0.2.2+. Required fields:
 
-- `id`, `version`, `model_sha256`: identity and the compatible Breeze base.
+- `id`, `version`, `model_sha256`: identity and the compatible Breeze base. Companion 0.3.0 also accepts the explicitly pinned quantizations of that same base/codec family; each model file retains its own checksum. Earlier companions require the exact model hash. See [model management](COMPANION.md#models).
 - `characters`: rows with `id`, optional `name`, and `route` (`breeze` only).
 - `voices`: Breeze voice IDs mapped to `file`, `ref_text`, `reference_sha256`, and optional source provenance.
 - `adapters`: adapter IDs mapped to relative `.gguf` paths.
