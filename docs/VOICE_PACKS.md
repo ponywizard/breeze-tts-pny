@@ -17,7 +17,9 @@ The companion accepts schema 1 and 2. Schema 2 is required when any route uses p
 - `legacy_speakers`: original numbered speaker IDs mapped explicitly to characters.
 - `files`: every payload path mapped to its SHA-256.
 
-A Breeze character selects `voice_id` and optional `settings`: `cfg_scale`, `temperature`, `depth_temperature`, `instruction`, `lora`. The server explicitly selects the stock base when `lora` is empty and rejects unacknowledged adapter selection. Inference uses seed 42, no text splitting and a 60-second audio cap. Character identity wins over placeholder speaker numbers.
+A Breeze character selects `voice_id` and optional `settings`: `cfg_scale`, `temperature`, `depth_temperature`, `instruction`, `lora`. The server explicitly selects the stock base when `lora` is empty and rejects unacknowledged adapter selection. Inference defaults to seed 42, with an optional per-request seed in companion 0.3.1+ (see [PROTOCOL.md](PROTOCOL.md#speech-request)), no text splitting and a 60-second audio cap. Character identity wins over placeholder speaker numbers.
+
+Companion 0.3.1+ also accepts per-request delivery `direction`, appended to a route's existing `instruction` for that synthesis only. An empty direction preserves the curated instruction, including an intentionally empty instruction on a trained adapter. Directions do not modify the voice pack or select another reference recording.
 
 A schema-2 character may select `output_speed: 1.25`; this is a playback field, separate from native inference settings. The current `curated-ponies-20261115` export uses it only for the slow-trained Pinkie adapter/reference. Other rows default to normal playback. Cached-reference metadata records the matching `output_speed`. The pack advertises `minimum_companion_version`; its new schema makes older companions reject it safely. See [voice update details](VOICE_UPDATES.md).
 

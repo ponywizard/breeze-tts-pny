@@ -121,6 +121,72 @@ class RouterChecks(unittest.TestCase):
                 self.assertEqual(response.status, 200); response.read(); connection.close()
                 self.assertEqual(self.native.requests[-1]['text'], [expected])
 
+    def test_seed_reaches_both_transports_without_changing_the_default(self):
+        for endpoint in ['/tts', '/tts/stream']:
+            for seed in [0, 123456789, 2147483647, None]:
+                with self.subTest(endpoint=endpoint, seed=seed):
+                    body = {'text': 'Hello!', 'character_id': 'spike'}
+                    if seed is not None: body['seed'] = seed
+                    expected = str(42 if seed is None else seed)
+                    connection, response = self.request(endpoint, body)
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(response.getheader('X-Breeze-Seed'), expected)
+                    response.read(); connection.close()
+                    self.assertEqual(self.native.requests[-1]['seed'], [expected])
+        self.assertNotIn('seed', self.bank['routes']['spike']['settings'])
+
+    def test_invalid_seed_never_reaches_native(self):
+        count = len(self.native.requests)
+        for endpoint in ['/tts', '/tts/stream']:
+            for seed in [-1, 2147483648, 2**64, True, False, None, '42', 42.0, .5, [], {}]:
+                with self.subTest(endpoint=endpoint, seed=seed):
+                    connection, response = self.request(endpoint, {'text': 'Hi', 'character_id': 'spike', 'seed': seed})
+                    self.assertEqual(response.status, 400)
+                    response.read(); connection.close()
+        self.assertEqual(len(self.native.requests), count)
+
+    def test_direction_preserves_voice_settings_and_does_not_leak_between_requests(self):
+        row = self.bank['routes']['pinkie_pie']
+        original = row['settings']
+        direction = 'Speak softly & slowly; sad, not angry. 轻声说话。'
+        try:
+            for curated in [None, '', 'Keep a refined British accent.']:
+                row['settings'] = {**original}
+                if curated is not None: row['settings']['instruction'] = curated
+                for endpoint in ['/tts', '/tts/stream']:
+                    for supplied in [direction, None, '', '  \n  ']:
+                        with self.subTest(curated=curated, endpoint=endpoint, direction=supplied):
+                            body = {'text': 'Hello!', 'character_id': 'pinkie_pie', 'seed': 123}
+                            if supplied is not None: body['direction'] = supplied
+                            connection, response = self.request(endpoint, body)
+                            self.assertEqual(response.status, 200)
+                            response.read(); connection.close()
+                            fields = self.native.requests[-1]
+                            expected = ' '.join(part for part in (curated, direction) if part) if supplied == direction else curated
+                            if expected is None: self.assertNotIn('instruction', fields)
+                            else: self.assertEqual(fields['instruction'], [expected])
+                            self.assertEqual(fields['voice_id'], ['pinkie_pie'])
+                            self.assertEqual(fields['text'], ['Hello!'])
+                            self.assertEqual(fields['lora'], ['pinkie'])
+                            self.assertEqual(fields['seed'], ['123'])
+                            self.assertEqual(row['settings'], {**original, **({'instruction': curated} if curated is not None else {})})
+        finally:
+            row['settings'] = original
+
+    def test_direction_length_and_types(self):
+        for endpoint in ['/tts', '/tts/stream']:
+            connection, response = self.request(endpoint, {'text': 'Hi', 'character_id': 'spike', 'direction': 'x' * 600})
+            self.assertEqual(response.status, 200)
+            response.read(); connection.close()
+            self.assertEqual(self.native.requests[-1]['instruction'], ['x' * 600])
+            count = len(self.native.requests)
+            for direction in ['x' * 601, None, 42, False, [], {}]:
+                with self.subTest(endpoint=endpoint, direction=direction):
+                    connection, response = self.request(endpoint, {'text': 'Hi', 'character_id': 'spike', 'direction': direction})
+                    self.assertEqual(response.status, 400)
+                    response.read(); connection.close()
+            self.assertEqual(len(self.native.requests), count)
+
     def test_slow_voice_playback_and_stream_receipt_match(self):
         row = self.bank['routes']['pinkie_pie']
         row['output_speed'] = 1.25

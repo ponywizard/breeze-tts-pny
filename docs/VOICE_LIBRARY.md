@@ -1,6 +1,6 @@
 # Voice library
 
-## Breeze Companion 0.3.0
+## Breeze Companion
 
 The **Voices** tab in `breeze-pny serve --web` (Windows: `breeze-companion.cmd`) integrates this reference workflow with speech generation and model management. It shares the loaded model and one synthesis slot with the game API. Save and Undo apply immediately; keep the companion running. Load a model from Models before preparing or auditioning a reference. Existing reference playback works even with the model unloaded.
 

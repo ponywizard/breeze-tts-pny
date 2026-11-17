@@ -10,7 +10,7 @@ import time
 import wave
 from . import __version__
 from .bank import resolve
-from .native import NativePCM, BusyError, CONTENT_TYPE
+from .native import NativePCM, BusyError, CONTENT_TYPE, DEFAULT_SEED
 from .events import event
 
 
@@ -71,9 +71,11 @@ def handler(router):
                 if len(raw) != length: raise ValueError('Truncated request')
                 locked = router.lock.acquire(blocking=False)
                 if not locked: raise BusyError('Voice renderer is busy')
-                row, text = resolve(router.bank, json.loads(raw))
+                body = json.loads(raw)
+                row, text = resolve(router.bank, body)
+                stream = NativePCM(router.port, row, text, seed=body.get('seed', DEFAULT_SEED),
+                                   direction=body.get('direction', ''))
                 if not router.healthy(): return self.json_reply(503, {'error': 'Breeze is unavailable'})
-                stream = NativePCM(router.port, row, text)
                 monitor = threading.Thread(target=self.watch_disconnect, args=(stream, finished), daemon=True)
                 monitor.start()
                 with stream:
@@ -84,6 +86,7 @@ def handler(router):
                                            ('Connection', 'close'), ('Cache-Control', 'no-store'),
                                            ('X-Sample-Rate', '24000'), ('X-Sample-Format', 's16le'),
                                            ('X-Channels', '1'), ('X-TTS-Backend', 'breeze'),
+                                           ('X-Breeze-Seed', str(stream.seed)),
                                            ('X-Breeze-Adapter', stream.adapter)]: self.send_header(key, value)
                         self.end_headers(); sent = True
                         for pcm in stream.chunks(): self.chunk(struct.pack('<I', len(pcm)) + pcm)
@@ -101,6 +104,7 @@ def handler(router):
                 self.send_header('Content-Type', 'audio/wav'); self.send_header('Content-Length', str(len(audio)))
                 self.send_header('X-TTS-Backend', 'breeze'); self.send_header('Cache-Control', 'no-store')
                 self.send_header('X-Breeze-Adapter', stream.adapter)
+                self.send_header('X-Breeze-Seed', str(stream.seed))
                 self.end_headers(); sent = True; self.wfile.write(audio)
                 event('speech', character=row['id'], backend=row['route'], transport='wav', processing_s=time.monotonic() - started)
             except BusyError as error:

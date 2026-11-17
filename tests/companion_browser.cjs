@@ -104,6 +104,13 @@ function firstLine(stream) {
     // Generate identical text across two references, using keyboard selection as a user would.
     await evaluate("document.querySelector('[data-tab=generate]').click()");
     await evaluate("window.testAudioBlobs = new Map(); const fixtureCreateObjectURL = URL.createObjectURL.bind(URL); URL.createObjectURL = blob => { const url = fixtureCreateObjectURL(blob); window.testAudioBlobs.set(url, blob); return url; }");
+    await evaluate(`window.testSpeechRequests = []; const fixtureFetch = window.fetch.bind(window);
+      window.fetch = async (url, options) => {
+        const response = await fixtureFetch(url, options);
+        if (url === '/tts') window.testSpeechRequests.push({body: JSON.parse(options.body), seed: response.headers.get('X-Breeze-Seed')});
+        return response;
+      };`);
+    assert.equal(await evaluate("document.getElementById('randomize-seed').checked"), true);
     const unchangedText = await evaluate("document.getElementById('text').value");
     const generateSample = async (identity, sample) => {
       const previous = await evaluate("document.getElementById('generated-audio').src");
@@ -120,18 +127,50 @@ function firstLine(stream) {
       assert.equal(await evaluate("document.getElementById('download').href"), current);
       assert.equal(await evaluate("(async () => new DataView(await window.testAudioBlobs.get(document.getElementById('download').href).arrayBuffer()).getInt16(44, true))()"), sample);
       assert.equal(await evaluate("document.getElementById('text').value"), unchangedText);
+      const request = await evaluate('window.testSpeechRequests.at(-1)');
+      assert.ok(Number.isInteger(request.body.seed) && request.body.seed >= 0 && request.body.seed <= 2147483647);
+      assert.equal(request.seed, String(request.body.seed));
+      assert.equal(request.body.direction, await evaluate("document.getElementById('direction').value.trim()"));
+      assert.equal(await evaluate("document.getElementById('seed').valueAsNumber"), request.body.seed);
+      assert.ok(await evaluate(`document.getElementById('result-label').textContent.includes('Seed ${request.body.seed} ·')`));
+      return request.body.seed;
     };
     const selectNext = async (key, code) => {
       await evaluate("document.getElementById('voice').focus()");
       await command('Input.dispatchKeyEvent', {type: 'keyDown', key, code: key, windowsVirtualKeyCode: code});
       await command('Input.dispatchKeyEvent', {type: 'keyUp', key, code: key, windowsVirtualKeyCode: code});
     };
-    await generateSample('derpy_hooves', 3000);
+    const firstSeed = await generateSample('derpy_hooves', 3000);
     await selectNext('ArrowDown', 40);
     assert.equal(await evaluate("document.getElementById('voice').value"), 'spike');
-    await generateSample('spike', 1500);
+    const secondSeed = await generateSample('spike', 1500);
+    assert.notEqual(secondSeed, firstSeed, 'Random mode reused the previous seed');
+    await evaluate("document.getElementById('randomize-seed').click()");
     await selectNext('ArrowUp', 38);
-    await generateSample('derpy_hooves', 3000);
+    assert.equal(await generateSample('derpy_hooves', 3000), secondSeed, 'Unchecking randomization did not keep the last seed');
+    await evaluate("document.getElementById('randomize-seed').click(); document.getElementById('seed').value = '0'; document.getElementById('seed').dispatchEvent(new Event('input'))");
+    assert.equal(await evaluate("document.getElementById('randomize-seed').checked"), false, 'Typing a seed did not select fixed mode');
+    assert.equal(await generateSample('derpy_hooves', 3000), 0);
+    assert.equal(await generateSample('derpy_hooves', 3000), 0, 'Fixed seed changed on the next generation');
+    const requestCount = await evaluate('window.testSpeechRequests.length');
+    for (const invalid of ['', '-1', '1.5', '2147483648']) {
+      await evaluate(`document.getElementById('seed').value = '${invalid}'; document.getElementById('seed').dispatchEvent(new Event('input')); document.getElementById('generate').click()`);
+      assert.equal(await evaluate("document.getElementById('seed').validity.valid"), false);
+      assert.equal(await evaluate('generation'), null);
+    }
+    assert.equal(await evaluate('window.testSpeechRequests.length'), requestCount, 'Invalid seed submitted speech');
+    await evaluate("document.getElementById('seed').value = '2147483647'; document.getElementById('seed').dispatchEvent(new Event('input'))");
+    assert.equal(await generateSample('derpy_hooves', 3000), 2147483647);
+    const direction = 'Speak softly & slowly. <em>Sad, hesitant.</em>';
+    await evaluate(`document.getElementById('direction').value = ${JSON.stringify('  ' + direction + '  ')}`);
+    assert.equal(await generateSample('derpy_hooves', 3000), 2147483647);
+    assert.equal(await evaluate("document.getElementById('result-direction').textContent"), 'Direction: ' + direction);
+    assert.equal(await evaluate("document.querySelectorAll('#result-direction em').length"), 0);
+    assert.equal(await evaluate("document.getElementById('result-direction').hidden"), false);
+    await evaluate("document.getElementById('direction').value = ''");
+    assert.equal(await evaluate("document.getElementById('result-direction').textContent"), 'Direction: ' + direction, 'Editing direction changed the previous take’s label');
+    assert.equal(await generateSample('derpy_hooves', 3000), 2147483647);
+    assert.equal(await evaluate("document.getElementById('result-direction').hidden"), true);
     await evaluate("document.querySelector('[data-tab=voices]').click()");
     const config = JSON.parse(fs.readFileSync(info.config, 'utf8'));
     assert.ok(config.voice_pack.includes('custom-'));
@@ -149,8 +188,12 @@ function firstLine(stream) {
     }
     await command('Emulation.setDeviceMetricsOverride', {width: 400, height: 900, deviceScaleFactor: 1, mobile: true});
     assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth'), 'Mobile layout overflows');
+    await evaluate("document.querySelector('[data-tab=generate]').click()");
+    assert.ok(await evaluate('document.documentElement.scrollWidth <= innerWidth'), 'Mobile seed controls overflow');
     await command('Page.reload');
     await waitFor("document.getElementById('name')?.textContent === 'Derpy Hooves'");
+    assert.equal(await evaluate("document.getElementById('seed').valueAsNumber"), 2147483647);
+    assert.equal(await evaluate("document.getElementById('randomize-seed').checked"), false);
     await evaluate("document.querySelector('[data-tab=voices]').click()");
     assert.deepEqual(errors, [], 'Browser console errors');
     await evaluate("window.generatedPlaybackStarted = false; document.getElementById('generated-audio').addEventListener('playing', () => { window.generatedPlaybackStarted = true; }, {once: true}); document.querySelector('[data-tab=generate]').click(); document.getElementById('generate').click()", true);
@@ -162,9 +205,13 @@ function firstLine(stream) {
     await waitFor("generation !== null");
     await evaluate('refresh()');
     await waitFor('state.speech_busy');
+    assert.equal(await evaluate("document.getElementById('seed').disabled && document.getElementById('randomize-seed').disabled"), true);
+    assert.equal(await evaluate("document.getElementById('direction').disabled"), true);
     await evaluate("document.getElementById('cancel').click()");
     await waitFor("generation === null && document.getElementById('status').textContent.includes('cancelled')");
     await waitFor("!state.speech_busy");
+    assert.equal(await evaluate("document.getElementById('seed').disabled || document.getElementById('randomize-seed').disabled"), false);
+    assert.equal(await evaluate("document.getElementById('direction').disabled"), false);
     await evaluate("document.getElementById('text').value = 'Hello again.'");
     await evaluate("document.querySelector('[data-tab=models]').click()");
     await waitFor("!document.querySelector('[data-action=unload]').disabled");
@@ -173,7 +220,7 @@ function firstLine(stream) {
     assert.equal(await evaluate("document.getElementById('generate').disabled"), true);
     await evaluate("document.querySelector('[data-action=load][data-model=q4_k]').click()");
     await waitFor("state.models.some(m => m.id === 'q4_k' && m.loaded) && state.job.status === 'complete'");
-    await evaluate("document.querySelector('[data-tab=generate]').click(); document.getElementById('generate').click()");
+    await evaluate("document.querySelector('[data-tab=generate]').click(); document.getElementById('direction').value = 'Speak softly, with a sad, hesitant tone.'; document.getElementById('generate').click()");
     await waitFor("!generation && document.getElementById('status').textContent.includes('Speech ready')");
     if (process.env.COMPANION_SCREENSHOTS) {
       fs.mkdirSync(process.env.COMPANION_SCREENSHOTS, {recursive: true});
@@ -186,7 +233,7 @@ function firstLine(stream) {
       }
     }
     assert.deepEqual(errors.filter(error => !error.includes('ERR_ABORTED')), [], 'Browser console errors');
-    console.log('PASS: reference workflow and provenance, same-text voice switching, Generate/autoplay/download, cancellation/recovery, shared model unload/load, mobile layout, reload');
+    console.log('PASS: reference workflow and provenance, same-text voice switching, randomized/fixed seeds and persistence, delivery direction, Generate/autoplay/download, cancellation/recovery, shared model unload/load, mobile layout, reload');
   } finally {
     if (socket) socket.close();
     if (browser) { browser.kill(); await new Promise(resolve => browser.once('exit', resolve)); }

@@ -11,14 +11,22 @@ from .playback import Playback125
 
 MAX_PCM = 24000 * 2 * 60
 CONTENT_TYPE = 'application/vnd.home-equestria.pcm-stream'
+DEFAULT_SEED = 42
+MAX_SEED = 2147483647  # The native form endpoint parses a signed 32-bit integer.
 
 
 class BusyError(Exception): pass
 
 
 class NativePCM:
-    def __init__(self, port, row, text):
+    def __init__(self, port, row, text, seed=DEFAULT_SEED, direction=''):
+        if type(seed) is not int or not 0 <= seed <= MAX_SEED:
+            raise ValueError('Seed must be an integer from 0 to 2147483647')
+        if not isinstance(direction, str) or len(direction) > 600:
+            raise ValueError('Direction must be a string of at most 600 characters')
         self.port, self.row, self.text = port, row, text
+        self.seed = seed
+        self.direction = direction.strip()
         self.socket = None
         self.connection = None
         self.cancelled = threading.Event()
@@ -42,8 +50,11 @@ class NativePCM:
             self.connection.connect()
             self.socket = self.connection.sock
             if self.cancelled.is_set(): raise ConnectionAbortedError('Cancelled')
-            params = {'text': breeze_text(self.text), 'voice_id': self.row['voice_id'], 'seed': 42,
-                      'split_chars': 0, 'max_new_tokens': 750, **self.row['settings']}
+            params = {'text': breeze_text(self.text), 'voice_id': self.row['voice_id'],
+                      'split_chars': 0, 'max_new_tokens': 750, **self.row['settings'], 'seed': self.seed}
+            if self.direction:
+                # Keep any curated accent/identity instruction and add this take's delivery.
+                params['instruction'] = ' '.join(part for part in (params.get('instruction', '').strip(), self.direction) if part)
             self.connection.request('POST', '/v1/audio/speech', urlencode(params),
                                     {'Content-Type': 'application/x-www-form-urlencoded'})
             self.response = self.connection.getresponse()

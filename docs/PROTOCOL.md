@@ -20,6 +20,12 @@ The probe runs when the client starts or its configuration changes. Connection f
 
 Both `POST /tts` (WAV) and `POST /tts/stream` receive the game's existing JSON TTS request plus `character_id`, taken from the speaking pony's original profile. With the mod active on a supported game/platform and an HTTP(S) MOSS URL ending in `/tts`, character identity takes precedence over stock per-character Ponese modes, missing numbered speakers and shared-voice defaults, including before capability detection succeeds. This applies to the whole voice roster; no character JSON edits are needed. The router selects the Breeze reference and adapter using that identity. Global disabled-TTS and Ponese settings still take precedence, and failed synthesis retains the configured Ponese fallback. Other providers and endpoint formats retain the game's normal voice selection.
 
+Companion 0.3.1+ accepts an optional integer `seed` from **0 to 2147483647** on both speech endpoints, for example `{"character_id":"spike","text":"Hello!","seed":12345}`. Omission uses **42**, preserving existing game/API behavior. Invalid seeds (including strings, booleans, fractions and null) return HTTP 400 before synthesis. Successful responses include the effective seed in `X-Breeze-Seed`. Companion 0.3.0 always uses 42. Repeating a take requires the same text, voice reference, model and settings as well as the seed. A fixed seed does not guarantee byte-identical audio: the native GPU renderer can still produce small waveform differences.
+
+Companion 0.3.1+ accepts optional `direction`, a string of at most 600 characters. For example, `{"character_id":"spike","text":"Hello!","seed":42,"direction":"Speak softly, with a sad, hesitant tone."}` retains the selected voice/reference and adapter, appends the direction to any curated voice instruction, and sends the combined instruction separately from spoken text. Omission, an empty string or whitespace preserves the original instruction exactly. Invalid types (including null) or longer strings return HTTP 400 before synthesis. Directions apply only to that request and are not logged by the companion.
+
+Existing leading `[emotion]` tags from game dialogue are still stripped, without selecting another reference or inferring a direction. Clients wanting explicit emotion control should use `direction`. The companion does not interpret `(angry)` or `(sad)` as reference selectors.
+
 ## Incremental response
 
 HTTP 200, with headers:

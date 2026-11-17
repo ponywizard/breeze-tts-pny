@@ -311,23 +311,45 @@ for (const tab of document.querySelectorAll('[data-tab]')) tab.onclick = () => {
 $('voice-search').oninput = renderVoices;
 $('voice').onchange = renderGenerateProvenance;
 $('text').oninput = () => { $('text-count').textContent = [...$('text').value].length; renderVoices(); };
+function saveSeedPreference() {
+  if (!$('seed').validity.valid) return;
+  try {
+    localStorage.setItem('breeze-companion-generation', JSON.stringify({seed: $('seed').valueAsNumber, randomize: $('randomize-seed').checked}));
+  } catch (_) { /* Generation still works when browser storage is unavailable. */ }
+}
+try {
+  const saved = JSON.parse(localStorage.getItem('breeze-companion-generation'));
+  if (saved && Number.isInteger(saved.seed) && saved.seed >= 0 && saved.seed <= 2147483647 && typeof saved.randomize === 'boolean') {
+    $('seed').value = saved.seed; $('randomize-seed').checked = saved.randomize;
+  }
+} catch (_) { /* Use the defaults when stored preferences are unavailable or invalid. */ }
+$('seed').oninput = () => { $('randomize-seed').checked = false; saveSeedPreference(); };
+$('randomize-seed').onchange = saveSeedPreference;
 $('generate').onclick = async () => {
   if (generation) return;
+  if ($('randomize-seed').checked) $('seed').value = crypto.getRandomValues(new Uint32Array(1))[0] & 0x7fffffff;
+  if (!$('seed').reportValidity()) return;
+  const seed = $('seed').valueAsNumber;
+  saveSeedPreference();
   $('generated-audio').pause();
   generation = new AbortController();
-  const character = $('voice').value, text = $('text').value;
+  const character = $('voice').value, text = $('text').value, direction = $('direction').value.trim();
   const name = state.characters.find(row => row.id === character)?.name || character;
   $('generate').disabled = true; $('cancel').hidden = false;
+  $('seed').disabled = true; $('randomize-seed').disabled = true;
+  $('direction').disabled = true;
   $('generation-note').textContent = 'Generating…'; status('Generating ' + name + '…');
   const started = performance.now();
   try {
     const response = await fetch('/tts', {method: 'POST', headers: {'Content-Type': 'application/json', 'X-Breeze-Token': token},
-      body: JSON.stringify({character_id: character, text}), signal: generation.signal});
+      body: JSON.stringify({character_id: character, text, seed, direction}), signal: generation.signal});
     if (!response.ok) throw new Error((await response.json()).error || 'Generation failed');
     showAudio('generated-audio', await response.blob());
     $('result').hidden = false;
     $('download').href = audioUrls.get('generated-audio'); $('download').download = character + '.wav';
-    $('result-label').textContent = `${name} · ${((performance.now() - started) / 1000).toFixed(1)} seconds to generate`;
+    $('result-label').textContent = `${name} · Seed ${seed} · ${((performance.now() - started) / 1000).toFixed(1)} seconds to generate`;
+    $('result-direction').textContent = direction ? 'Direction: ' + direction : '';
+    $('result-direction').hidden = !direction;
     status('Speech ready.');
     const audio = $('generated-audio'), source = audio.src;
     audio.play().catch(() => {
@@ -337,6 +359,8 @@ $('generate').onclick = async () => {
     status(error.name === 'AbortError' ? 'Generation cancelled.' : error.message, error.name !== 'AbortError');
   } finally {
     generation = null; $('cancel').hidden = true; $('generation-note').textContent = '';
+    $('seed').disabled = false; $('randomize-seed').disabled = false;
+    $('direction').disabled = false;
     await refresh();
   }
 };

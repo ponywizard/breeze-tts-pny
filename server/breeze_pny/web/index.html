@@ -4,17 +4,19 @@
 <meta name="color-scheme" content="light"><title>Breeze Companion</title>
 <link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
 <body><main class="page">
-<header><div><h1>Breeze Companion <small id="version">0.3.0</small></h1></div><span id="engine" role="status">Connecting…</span></header>
+<header><div><h1>Breeze Companion <small id="version">0.3.1</small></h1></div><span id="engine" role="status">Connecting…</span></header>
 <nav class="tabs" aria-label="Companion"><button data-tab="generate" aria-current="page">Generate</button><button data-tab="voices">Voices</button><button data-tab="models">Models</button></nav>
 <p id="status" role="status" aria-live="polite">Opening your companion…</p>
 <section id="tab-generate">
 <h2>Generate speech</h2>
 <div class="compose"><div><label for="voice-search">Find a voice</label><input id="voice-search" type="search" placeholder="Pinkie, Twilight, Spike…"><label for="voice">Voice</label><select id="voice" size="10" aria-label="Voice"></select></div>
-<div><label for="text">What should they say?</label><textarea id="text" rows="7" maxlength="600" placeholder="Type a line of dialogue…">Hello! It is good to see you again.</textarea><p class="muted"><span id="text-count">33</span> / 600 characters · one line or a short paragraph</p>
+<div><label for="text">What should they say?</label><textarea id="text" rows="7" maxlength="600" placeholder="Type a line of dialogue…" aria-describedby="cue-help">Hello! It is good to see you again.</textarea><p id="cue-help" class="muted"><span id="text-count">33</span> / 600 characters · one line or a short paragraph · Try <code>(gasp)</code> or <code>(giggles)</code> in your text.</p>
+<label for="direction">Delivery direction (optional)</label><textarea id="direction" rows="2" maxlength="600" placeholder="Speak softly, with a sad, hesitant tone." aria-describedby="direction-help"></textarea><p id="direction-help" class="muted">Describe tone, emotion or pace. Leave blank to use the voice’s usual delivery.</p>
+<div class="seed-controls"><label for="seed">Seed<input id="seed" type="number" min="0" max="2147483647" step="1" value="42" required aria-describedby="seed-help"></label><label class="seed-random"><input id="randomize-seed" type="checkbox" checked> Randomize each generation</label></div>
+<p id="seed-help" class="muted">Uncheck to reuse the displayed seed. Typing a seed turns randomization off.</p>
 <div class="actions"><button id="generate">Generate</button><button id="cancel" hidden>Cancel</button><span id="generation-note" class="muted"></span></div>
-<div id="result" hidden><audio id="generated-audio" controls></audio><a id="download" download="breeze.wav">Download WAV</a><span id="result-label" class="muted"></span></div></div></div>
+<div id="result" hidden><audio id="generated-audio" controls></audio><a id="download" download="breeze.wav">Download WAV</a><span id="result-label" class="muted"></span><p id="result-direction" class="muted" hidden></p></div></div></div>
 <details id="generate-provenance" hidden><summary>Reference source</summary><div id="generate-source" class="provenance"></div></details>
-<details><summary>Expressions and playback</summary><p>Try <code>(gasp)</code> or <code>(giggles)</code> in your text. Each voice uses its curated settings, including Pinkie’s playback correction. Results are mono 24 kHz WAV.</p></details>
 </section>
 <section id="tab-voices" hidden><h2>Reference Manager</h2><p>Listen, try a replacement recording, then save or undo. Your files stay on this computer.</p>
 <div class="voice-layout">

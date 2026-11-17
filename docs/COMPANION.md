@@ -1,4 +1,4 @@
-# Breeze Companion 0.3.0
+# Breeze Companion 0.3.1
 
 Breeze Companion is a local browser interface for speech generation, personal voice references and model management. It works without Home: Equestria. A single native renderer supplies the browser and the game-compatible HTTP API, so the model is loaded only once.
 
@@ -23,6 +23,12 @@ The browser listener always binds to `127.0.0.1`, validates Host/Origin and requ
 Search the installed voices, select one, enter up to 600 characters, and select **Generate**. The result plays automatically when generation finishes; use the player to pause or replay it, or use **Download WAV**. Starting another generation pauses the previous clip. If your browser blocks automatic playback, press Play in the player. **Cancel** disconnects the request and cancels its native synthesis. Output is mono, 24 kHz, signed 16-bit WAV.
 
 Generation uses the same route, adapter, cue substitutions and playback correction as the game API. Pinkie’s slow-trained profile is automatically corrected to 1.25× playback. Use `(gasp)` and `(giggles)` directly, or the reviewed textual substitutions described in [VOICE_UPDATES.md](VOICE_UPDATES.md).
+
+**Randomize each generation** is on by default. Each generation chooses a new **Seed** and shows it beside the finished result. Uncheck the box to reuse the displayed seed, or type a seed to turn randomization off automatically. Seeds are whole numbers from 0 to 2147483647; the browser remembers your seed and checkbox setting. Reusing a seed helps repeat a take with the same text, voice reference, model and settings. The native GPU renderer can still produce small waveform differences, so a fixed seed does not guarantee byte-identical audio. Companion 0.3.0 used a fixed seed of 42; API requests without a seed still use 42.
+
+**Delivery direction**, directly below the speech text box, is an optional instruction of up to 600 characters. Try “Speak softly, with a sad, hesitant tone” or “Speak sharply, with restrained anger.” This steers the existing reference voice using Breeze's [voice-direction support](https://github.com/HoppouAI/Breeze-TTS-2.cpp/blob/87b43667ca5597f826441991e416a279ed7373b9/README.md#cli). The companion adds your direction to any curated accent/identity instruction and sends it separately from the spoken text. Blank restores the voice's usual settings; the result records the direction used. Hold the seed fixed when comparing directions. Results vary by voice and model, including the trained pony adapters.
+
+Use the direction field for emotions such as angry or sad, and the spoken-text box for supported vocal events such as `(gasp)` and `(giggles)`. A short cue hint appears below the text box. The companion does not select an angry/sad reference automatically: each character uses one selected recording, which can be replaced in **Voices**. An emotion-based reference pool would require additional labeled recordings and routing. Seed and direction controls were added in companion 0.3.1.
 
 Open **Reference source** to see the selected voice's episode or source label, recording and annotation links when supplied, notes, and audio processing history. The same information appears beside the current reference in **Voices**. These details come from the installed pack or your saved reference notes; missing credits or links are not filled in automatically.
 
@@ -59,6 +65,15 @@ Compatibility is an explicit list of these pinned quantizations of the same base
 The Voices tab contains the Reference Manager: search characters, play original recordings, import/trim audio, enter the exact transcript, audition, save and undo. Follow [VOICE_LIBRARY.md](VOICE_LIBRARY.md) for recording limits and personal pack behavior.
 
 Saved voices immediately apply to both Generate and the game API. The curated archive includes all original WAVs, and personal packs retain replacement WAVs. Loading another model discards an unsaved prepared replacement; prepare and audition it again before saving. Unchanged reference caches can be reused within the pinned model family.
+
+## Upgrade from 0.3.0
+
+Stop the running companion before updating. The game mod, native runtime, models and `breeze-pny-curated-voices-20261115.tar.gz` are unchanged; reuse your existing voice archive.
+
+- **Linux:** extract the 0.3.1 archive, place the voice archive inside or beside it, and run `python3 installer/install.py --prefix /path/to/existing/installation --update` from the extracted folder.
+- **Windows:** copy the contents of the extracted 0.3.1 package into your existing package folder (the one containing `setup.cmd` and `companion/`), keeping the `companion/` directory. Place the voice archive inside or beside that folder, then run `setup.cmd --update`.
+
+Setup preserves the selected model, ports and personal references and reuses verified assets. Restart using the installed launcher, retaining any port overrides such as `--port 18794`, and open its new session link. The page header should show **0.3.1**; refreshing an old running process does not load the updated Python server.
 
 ## Upgrade from 0.2.1
 

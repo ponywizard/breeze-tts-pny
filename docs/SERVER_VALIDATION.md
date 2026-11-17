@@ -1,5 +1,15 @@
 # Companion validation
 
+## Breeze Companion 0.3.1
+
+Companion 0.3.1 passes 73 Python tests on Linux and the Chromium workflow checks, including randomized seeds, retaining the last seed, manual seed entry, invalid-input rejection, persistence after reload, delivery direction, cancellation recovery and mobile layout. Both speech transports forward explicit seeds, return `X-Breeze-Seed`, reject invalid seeds before native synthesis and retain the default of 42 when omitted. Direction checks cover Unicode and length/type validation, preserving curated instructions (including deliberately empty ones), keeping spoken text separate, restoring defaults after a directed request, and displaying the completed take's direction safely without changing it when the input is edited.
+
+The same 73-test suite passes under the pinned embedded Windows Python in Wine, with the same five expected skips as 0.3.0. This does not replace native Windows browser/GPU or game/VR testing, which remains with community testers. The earlier all-model matrix below remains the coverage for models other than Q4; the runtime and model files are unchanged.
+
+Real Q4 generation on the RX 6700 XT accepted seeds 0 and 2147483647. For identical text, Spike's 42 → 43 → 42 sequence returned different audio for 43 and byte-identical audio for the repeated 42. Pinkie's repeated 42 produced closely matching waveforms, but not identical bytes: correlation was approximately 0.9996, compared with approximately 0.044 for seed 43. A follow-up without playback correction confirmed that the differences were already present in native PCM; applying the playback converter with different chunk sizes produced identical bytes from the same input. Fixed seeds control sampling randomness but do not promise bit-exact GPU output. The diagnostics are retained under ignored `build/companion-0.3.0/seed-native/`. The 0.3.0 archives predate these controls.
+
+Real Q4 direction checks generated default, sad and angry instructions for Spike, Pinkie and Octavia at seed 42 with identical spoken text. Each returned valid mono 24 kHz WAV with the expected adapter, distinct output, and unchanged stored voice settings. This covers a base voice, a trained adapter with an empty default instruction, and a curated accent instruction. These checks establish functional direction support, not emotional accuracy or voice similarity; a listening comparison page and all nine WAVs are retained under ignored `build/companion-0.3.0/direction-native/`.
+
 ## Breeze Companion 0.3.0
 
 The 0.3.0 release combines the browser interface and model manager with the previously prepared vocal-cue and slow-Pinkie changes. The game mod remains 0.1.3 and the native runtime remains the patched 0.1.6 build.

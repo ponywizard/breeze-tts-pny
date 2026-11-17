@@ -10,7 +10,9 @@ After setup, run **`breeze-companion.cmd`** for Generate, Voices and Models. The
 
 ## Install the companion
 
-1. Download `breeze-tts-pny-0.3.0-windows-x86_64.zip` and `breeze-pny-curated-voices-20261115.tar.gz` from the same 0.3.0 release package. The ZIP includes game mod `breeze_tts_pny-0.1.3-windows-x86_64.pck`; it is also available from the [mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3). `WINDOWS-SHA256SUMS` records the expected download hashes.
+Existing 0.3.0 users should follow [Upgrade from 0.3.0](COMPANION.md#upgrade-from-030) to update the companion while keeping installed models and personal references.
+
+1. Download `breeze-tts-pny-0.3.1-windows-x86_64.zip` and `breeze-pny-curated-voices-20261115.tar.gz` from the same 0.3.1 release package. The ZIP includes game mod `breeze_tts_pny-0.1.3-windows-x86_64.pck`; it is also available from the [mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3). `WINDOWS-SHA256SUMS` records the expected download hashes.
 2. Extract the ZIP to a user-owned folder, such as `C:\BreezePNY`. Place the voice-pack `.tar.gz` **inside that extracted folder**, alongside `setup.cmd`. Leave the voice pack compressed. Keep the folder in its intended location before setup.
 3. Run `setup.cmd`. The companion installs in the folder's `companion` subdirectory. Setup copies the voices and adapters, downloads the pinned Q8 model (about 3.6 GB), and verifies the files. Allow at least 6 GB of free space and keep the setup window open until it finishes. Progress and checksum verification are shown in the terminal.
 4. Run `breeze-companion.cmd` for the UI, or `start-companion.cmd` for API-only operation. Wait for the model to be ready. Leave this window open while playing; Ctrl+C stops the companion and its owned native process.
@@ -51,7 +53,7 @@ When upgrading from the published 0.2.1 ZIP, replace its older 0.1.1 game mod wi
 
 ## Optional isolated playtest
 
-Use this only when you want a disposable profile instead of your normal game saves. The 0.3.0 bundle contains the updated helper and 0.1.3 game pack. Extract a fresh supported Windows game release and run:
+Use this only when you want a disposable profile instead of your normal game saves. The current bundle contains the updated helper and 0.1.3 game pack. Extract a fresh supported Windows game release and run:
 
 ```powershell
 .\prepare-playtest.cmd "C:\path\to\fresh\game"

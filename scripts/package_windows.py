@@ -75,7 +75,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent / "server"))
 sys.argv[1:1]=["smoke"]
 runpy.run_module("breeze_pny",run_name="__main__")
 '''
-    files['START-HERE.txt'] = b'''Breeze Companion 0.3.0 for Windows x86_64.
+    files['START-HERE.txt'] = f'''Breeze Companion {__version__} for Windows x86_64.
 Earlier native releases were tested in flatscreen; see docs/VALIDATION.md.
 Windows PCVR is untested and ships with case-by-case support.
 Read docs/WINDOWS.md for setup, requirements and test coverage.
@@ -88,7 +88,7 @@ Set MOSS-compatible TTS to http://127.0.0.1:18792/tts with automatic voices.
 For a disposable profile, optionally use prepare-playtest.cmd; see docs/WINDOWS.md.
 Model weights are separate; setup downloads the pinned model or accepts
 --model-file "C:\\path\\to\\breeze-tts-2-q8_0.gguf" for offline installation.
-'''
+'''.encode('utf-8')
     prefix = output.stem
     with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
         for name, raw in sorted(files.items()): archive.writestr(prefix + '/' + name, raw)

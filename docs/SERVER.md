@@ -13,9 +13,11 @@ For Windows, use [the Windows package](WINDOWS.md), which includes Python and th
 
 ## Install
 
+Existing 0.3.0 users should follow [Upgrade from 0.3.0](COMPANION.md#upgrade-from-030) to update the companion while keeping installed models and personal references.
+
 Download these matching release files:
 
-- `breeze-tts-pny-server-0.3.0-linux-x86_64.tar.gz`
+- `breeze-tts-pny-server-0.3.1-linux-x86_64.tar.gz`
 - `breeze-pny-curated-voices-20261115.tar.gz`
 - `breeze_tts_pny-0.1.3-linux-x86_64.pck` for the game
 
@@ -24,8 +26,8 @@ Download these matching release files:
 Extract the server archive, put the voice-pack `.tar.gz` inside the extracted folder alongside `installer/`, and leave the voice pack compressed:
 
 ```bash
-tar -xzf breeze-tts-pny-server-0.3.0-linux-x86_64.tar.gz
-cd breeze-tts-pny-server-0.3.0-linux-x86_64
+tar -xzf breeze-tts-pny-server-0.3.1-linux-x86_64.tar.gz
+cd breeze-tts-pny-server-0.3.1-linux-x86_64
 # Copy the downloaded voice archive into this directory before continuing.
 breeze_pny_prefix="${XDG_DATA_HOME:-$HOME/.local/share}/breeze-tts-pny"
 python3 installer/install.py --prefix "$breeze_pny_prefix"
