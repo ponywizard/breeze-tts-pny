@@ -1,5 +1,11 @@
 # Companion validation
 
+## Breeze Companion 0.3.3
+
+The 85-test Python suite passes on Linux and under bundled Windows Python/Wine (five expected Windows skips). Removal checks cover an older added voice while keeping newer additions and curated reference edits, immediate API routing, authentication and busy protection, operation with the model unloaded, restart/update persistence, undo, invalid and stock IDs, and configuration-write failure without losing the active pack. Chromium verifies the Remove voice button, actual confirmation and cancellation dialogs, selection/list updates, reload and restoring the removal with Undo last change. The removal retains pack snapshots and audio; it does not erase recordings or test disk reclamation.
+
+Disposable packaged installations upgrade from 0.3.2 on Linux and under embedded Windows Python/Wine, preserving configuration and pre-existing custom voices while reusing the verified Q8 model. Both installed launchers serve the authenticated UI through this machine's LAN interface. Removing the older of two custom routes preserves all other routes, rejects the removed route through the game API, survives restart, supports Undo after restart, and remains removed after another update and restart. These checks reuse a verified bundled reference cache and keep the model unloaded; they do not establish new synthesis or voice-quality coverage. The release archives pass the nested-archive audit with no findings. Native Windows and second-computer LAN testing remain with community testers.
+
 ## Breeze Companion 0.3.2
 
 The 81-test Python suite passes on Linux and under the bundled Windows Python in Wine (five expected skips). New checks cover independent API/web CLI addresses, default/specific/wildcard listeners, per-interface Host/Origin checks, missing or wrong tokens, duplicate headers and address-discovery failure. Voice checks cover adding a named route, rejecting duplicate/invalid names and IDs, requiring a preview, immediate generation, model switching, restart, replacement, undo, update preservation and conflicts with new curated IDs. The installer test preserves both a curated reference replacement and an added voice.

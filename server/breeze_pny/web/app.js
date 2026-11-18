@@ -32,6 +32,7 @@ function controls() {
   $('apply').disabled = busy || !pending;
   $('undo').disabled = busy || !state?.can_undo;
   $('reference').disabled = busy || !selected?.reference_available;
+  $('remove-voice').disabled = busy || !selected?.added;
   document.body.classList.toggle('busy', busy);
 }
 async function perform(message, operation) {
@@ -127,6 +128,7 @@ function select(id) {
   $('current-reference').hidden = Boolean(selected.new);
   $('current-preview').hidden = Boolean(selected.new);
   $('voice-id').textContent = selected.new ? '' : 'Voice ID: ' + selected.id;
+  $('remove-voice').hidden = !selected.added;
   $('reference-heading').textContent = selected.new ? 'Reference recording' : 'Replace reference';
   $('try').textContent = selected.new ? 'Generate voice preview' : 'Generate replacement preview';
   $('apply').textContent = selected.new ? 'Save voice' : 'Save reference';
@@ -244,6 +246,16 @@ $('undo').onclick = () => perform('Restoring the previous voice pack…', async 
   state = await request('/api/undo', {}); select(identity); renderVoices();
   status('Previous voice pack restored.');
 });
+$('remove-voice').onclick = () => {
+  if (busy || !selected?.added) return;
+  const {id, name} = selected;
+  if (!confirm(`Remove “${name}” from Voices, Generate and the API? You can restore it with Undo last change.`)) return;
+  return perform('Removing ' + name + '…', async () => {
+    state = await request('/api/remove-voice', {character: id});
+    select(id); renderVoices();
+    status('Voice removed. Undo last change will restore it.');
+  });
+};
 
 let generation = null, refreshTimer, modelSignature = '', jobSignature = '';
 function renderVoices() {

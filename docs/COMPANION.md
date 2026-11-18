@@ -1,4 +1,4 @@
-# Breeze Companion 0.3.2
+# Breeze Companion 0.3.3
 
 Breeze Companion is a local browser interface for speech generation, personal voice references and model management. It works without Home: Equestria. A single native renderer supplies the browser and the game-compatible HTTP API, so the model is loaded only once.
 
@@ -40,7 +40,9 @@ In **Voices**, select **Add voice**, enter a name, and keep or edit the suggeste
 
 The new name appears immediately in **Generate** and **Voices**. API clients use its displayed ID as `character_id`. Added voices use the base model without a pony LoRA adapter; adding one does not create a new character in the game. Existing character replacements still retain that character's adapter and playback settings.
 
-New voices and their reference audio survive restarts and compatible companion/voice-pack updates. **Undo last save** removes the latest addition or restores the previous reference. The original curated pack is kept. If a future curated pack introduces the same ID as an added voice, the update stops instead of overwriting it.
+New voices and their reference audio survive restarts and compatible companion/voice-pack updates. **Undo last change** restores the previous voice-pack snapshot. The original curated pack is kept. If a future curated pack introduces the same ID as an added voice, the update stops instead of overwriting it.
+
+**Removing a specific voice:** select an added custom voice in **Voices**, choose **Remove voice**, then confirm. It disappears immediately from Voices, Generate and API routing, while later additions and reference edits stay intact. Removal also works with the model unloaded and persists across restarts and updates. **Undo last change** restores the removed voice. Stock characters, including ones with replacement references, cannot be removed. Saved pack snapshots and audio are retained for undo; this does not permanently erase recordings or reclaim their disk space. Companion 0.3.2 has only Undo, which restores whole pack snapshots in reverse order.
 
 ## Generate
 
@@ -92,14 +94,14 @@ Saved voices immediately apply to both Generate and the game API. The curated ar
 
 <a id="upgrade-from-030"></a>
 
-## Upgrade from 0.3.0 or 0.3.1
+## Upgrade from 0.3.0–0.3.2
 
 Stop the running companion before updating. The game mod, native runtime, models and `breeze-pny-curated-voices-20261115.tar.gz` are unchanged; reuse your existing voice archive.
 
-- **Linux:** extract the 0.3.2 archive, place the voice archive inside or beside it, and run `python3 installer/install.py --prefix /path/to/existing/installation --update` from the extracted folder.
-- **Windows:** copy the contents of the extracted 0.3.2 package into your existing package folder (the one containing `setup.cmd` and `companion/`), keeping the `companion/` directory. Place the voice archive inside or beside that folder, then run `setup.cmd --update`.
+- **Linux:** extract the 0.3.3 archive, place the voice archive inside or beside it, and run `python3 installer/install.py --prefix /path/to/existing/installation --update` from the extracted folder.
+- **Windows:** copy the contents of the extracted 0.3.3 package into your existing package folder (the one containing `setup.cmd` and `companion/`), keeping the `companion/` directory. Place the voice archive inside or beside that folder, then run `setup.cmd --update`.
 
-Setup preserves the selected model, ports and personal references and reuses verified assets. Restart using the installed launcher, retaining any port overrides such as `--port 18794`, and open its new session link. The page header should show **0.3.2**; refreshing an old running process does not load the updated Python server.
+Setup preserves the selected model, ports and personal references and reuses verified assets. Restart using the installed launcher, retaining any port overrides such as `--port 18794`, and open its new session link. The page header should show **0.3.3**; refreshing an old running process does not load the updated Python server.
 
 ## Upgrade from 0.2.1
 

@@ -4,7 +4,7 @@
 <meta name="color-scheme" content="light"><title>Breeze Companion</title>
 <link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
 <body><main class="page">
-<header><div><h1>Breeze Companion <small id="version">0.3.2</small></h1></div><span id="engine" role="status">Connecting…</span></header>
+<header><div><h1>Breeze Companion <small id="version">0.3.3</small></h1></div><span id="engine" role="status">Connecting…</span></header>
 <nav class="tabs" aria-label="Companion"><button data-tab="generate" aria-current="page">Generate</button><button data-tab="voices">Voices</button><button data-tab="models">Models</button></nav>
 <p id="status" role="status" aria-live="polite">Opening your companion…</p>
 <section id="tab-generate">
@@ -27,6 +27,7 @@
       <label for="new-id">Voice ID</label><input id="new-id" maxlength="64" pattern="[A-Za-z0-9_\-]{1,64}" required aria-describedby="new-id-help">
       <p id="new-id-help" class="muted">Filled from the name; you can change it. Use this ID as <code>character_id</code> in the TTS API. New voices use the base model and appear in Generate after saving.</p></div>
     <p id="voice-id" class="muted"></p>
+    <button id="remove-voice" class="quiet" hidden>Remove voice</button>
     <article id="current-reference"><h3>Current reference</h3><blockquote id="transcript"></blockquote>
       <details class="reference-source" open><summary>Reference source</summary><div id="source" class="provenance"></div></details>
       <button id="reference" class="quiet">Listen to reference</button><audio id="current-audio" controls hidden></audio>
@@ -44,7 +45,7 @@
       <button id="try" disabled>Generate replacement preview</button><audio id="new-speech-audio" controls hidden></audio>
       <div class="save"><button id="apply" disabled>Save reference</button><span class="muted">The previous voice pack is kept for undo.</span></div>
     </article>
-    <footer><button id="undo" class="quiet" disabled>Undo last save</button><p class="muted">Saved references apply to the API and generation page immediately. The previous pack is kept for undo.</p></footer>
+    <footer><button id="undo" class="quiet" disabled>Undo last change</button><p class="muted">Voice changes apply to the API and generation page immediately. The previous pack is kept for undo.</p></footer>
   </section>
 </div>
 </section>

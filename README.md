@@ -4,11 +4,13 @@ Breeze character voices and Talking Avatar lip-sync for **Home: Equestria 0.3.1.
 
 The release has two parts: a game mod and a companion that generates speech. The curated voice pack contains 139 reference voices and six Mane Six LoRA adapters: Applejack, Fluttershy, Pinkie Pie, Rainbow Dash, Rarity and Twilight Sparkle. The companion provides TTS; keep using your normal LLM and speech-to-text setup.
 
-## Breeze Companion 0.3.2
+## Breeze Companion 0.3.3
 
-**Breeze Companion 0.3.2** provides a local browser interface with **Generate**, **Voices**, and **Models** tabs. Generate speech and download WAVs without the game, edit references, and download/load/unload/delete verified F16, Q8, Q6, Q4 and experimental depth-decoder variants. The browser and game API share one native renderer. The interface uses only bundled HTML/CSS/JavaScript and Python's standard library.
+**Breeze Companion 0.3.3** provides a local browser interface with **Generate**, **Voices**, and **Models** tabs. Generate speech and download WAVs without the game, edit references, and download/load/unload/delete verified F16, Q8, Q6, Q4 and experimental depth-decoder variants. The browser and game API share one native renderer. The interface uses only bundled HTML/CSS/JavaScript and Python's standard library.
 
-Version **0.3.2** adds **LAN browser hosting** with `--web-host` and **Voices → Add voice** for new named voices from reference audio and transcripts. Preview, save and undo new voices, use them immediately in Generate or the API, and retain them across restarts and compatible updates. On Windows, run `.\breeze-companion.cmd --web-host 0.0.0.0 --no-browser`; see [LAN hosting](docs/COMPANION.md#lan-hosting) for links and firewall setup. Localhost remains the default.
+Version **0.3.3** adds **Remove voice** for any selected added custom voice. Other voices and reference edits stay intact, and **Undo last change** can restore the removal. Removal works with the model unloaded and persists across restarts and compatible updates. Saved pack snapshots and audio remain available for undo.
+
+The **LAN browser hosting** and **Voices → Add voice** features from 0.3.2 remain available. On Windows, run `.\breeze-companion.cmd --web-host 0.0.0.0 --no-browser`; see [LAN hosting](docs/COMPANION.md#lan-hosting) for links and firewall setup. Localhost remains the default.
 
 The seed and **Delivery direction** controls from 0.3.1 remain available. Both speech API endpoints accept optional `seed` and `direction`; existing game requests retain their defaults.
 
@@ -18,12 +20,12 @@ After setup, run **`breeze-companion.cmd`** on Windows, or **`breeze-pny serve -
 
 ## Downloads
 
-Download the companion for your platform and the shared voice archive from [Breeze Companion 0.3.2](https://github.com/ponywizard/breeze-tts-pny/releases/tag/v0.3.2):
+Download the companion for your platform and the shared voice archive from [Breeze Companion 0.3.3](https://github.com/ponywizard/breeze-tts-pny/releases/tag/v0.3.3):
 
 | Platform | Companion files |
 | --- | --- |
-| Windows | `breeze-tts-pny-0.3.2-windows-x86_64.zip` and `breeze-pny-curated-voices-20261115.tar.gz` |
-| Linux | `breeze-tts-pny-server-0.3.2-linux-x86_64.tar.gz` and `breeze-pny-curated-voices-20261115.tar.gz` |
+| Windows | `breeze-tts-pny-0.3.3-windows-x86_64.zip` and `breeze-pny-curated-voices-20261115.tar.gz` |
+| Linux | `breeze-tts-pny-server-0.3.3-linux-x86_64.tar.gz` and `breeze-pny-curated-voices-20261115.tar.gz` |
 
 The Windows ZIP includes Python, the native runtime and game mod **0.1.3**. Linux includes the native runtime and uses your installed Python 3.11+. Both platforms use the same voice archive. `SHA256SUMS` and the build receipts identify the release files.
 
@@ -36,7 +38,7 @@ For Home: Equestria, also install **game mod 0.1.3**, available in the same rele
 
 The mod remains independently versioned at 0.1.3; existing 0.1.3 users keep their game pack. It uses the game's built-in streaming/lip-sync and includes the stock-Ponese and Watch Party routing fixes. Updating from companion 0.2.1 requires the new companion and voice archive; follow [the upgrade instructions](docs/COMPANION.md#upgrade-from-021) to preserve the selected model, ports and compatible personal references.
 
-Updating from **companion 0.3.0 or 0.3.1** reuses the same voice archive, runtime and models. Stop the companion, run the new setup with `--update`, then restart it; see [the upgrade instructions](docs/COMPANION.md#upgrade-from-030).
+Updating from **companion 0.3.0–0.3.2** reuses the same voice archive, runtime and models. Stop the companion, run the new setup with `--update`, then restart it; see [the upgrade instructions](docs/COMPANION.md#upgrade-from-030).
 
 Reference management and all 139 playable reference recordings are included in 0.3.0. The older [standalone Reference Management Utility](https://github.com/ponywizard/breeze-tts-pny/releases/tag/reference-manager-v0.1.0) remains available for older installations; it is not required for Breeze Companion.
 
@@ -88,7 +90,7 @@ Use the supported game version and one copy of this mod. Remove earlier developm
 
 Windows reports will be investigated case by case. Earlier native playtests used an RX 6700 XT; other GPUs and driver combinations have less coverage. [Validation notes](docs/VALIDATION.md) distinguish current automated results from earlier manual observations.
 
-Companion 0.3.2 passes the 81-test Python suite on Linux and under embedded Windows Python/Wine (five expected Windows skips), plus Chromium workflows through localhost and a LAN IPv4 address. The 0.3.0 release established coverage for all seven models on Linux Vulkan; 0.3.1 added real Q4 seed/direction checks. Native Windows browser/firewall/GPU testing is left to community reports. There is no new in-game or VR playtest claim for this companion update. See [companion validation](docs/SERVER_VALIDATION.md).
+Companion 0.3.3 passes the 85-test Python suite on Linux and under embedded Windows Python/Wine (five expected Windows skips), plus Chromium removal/confirmation/cancellation/reload/undo and existing workflow checks. Earlier releases established all-model Linux Vulkan, real Q4 seed/direction and LAN browser coverage. Native Windows browser/firewall/GPU testing is left to community reports. There is no new in-game or VR playtest claim for this companion update. See [companion validation](docs/SERVER_VALIDATION.md).
 
 For support, include your OS, GPU/driver, game/mod/companion versions, display mode and steps to reproduce. Companion logs are saved in its `logs` directory; include the matching `companion-*.jsonl` and `native-*.log`, plus the game's log when relevant. Review logs before posting: game logs can contain conversations and diagnostic logs can contain local file paths. Nothing is uploaded automatically.
 

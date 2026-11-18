@@ -1,4 +1,5 @@
 import base64
+import copy
 from email.parser import BytesParser
 from email.policy import default
 import hashlib
@@ -247,6 +248,58 @@ class VoiceLibraryChecks(unittest.TestCase):
                 self.editor.prepare(identity, 'Words.', WAV, name=name)
         self.assertIsNone(self.editor.pending)
         self.assertEqual(len(list((self.editor.workspace / 'voices').glob('*.breeze'))), 1)
+
+    def test_remove_older_voice_preserves_other_edits_and_supports_restart_update_and_undo(self):
+        for identity, name in [('custom_first', 'First voice'), ('custom_second', 'Second voice')]:
+            prepared = self.editor.prepare(identity, 'My words.', WAV, name=name)
+            self.editor.audition(identity, 'Hello.', prepared['id']); self.editor.apply(prepared['id'])
+        replacement = self.prepared(); self.editor.apply(replacement['id'])
+        previous = self.editor.bank_root
+        before = copy.deepcopy(self.editor.bank)
+        self.editor.prepare('custom_second', 'Unsaved words.', WAV)
+        result = self.editor.remove_voice('custom_first')
+        self.assertIsNone(self.editor.pending)
+        self.assertNotIn('custom_first', [row['id'] for row in result['characters']])
+        bank = load_bank(self.editor.bank_root)
+        self.assertNotIn('custom_first', bank['routes'])
+        self.assertNotIn('custom_first', bank['custom_voices'])
+        self.assertEqual(bank['custom_characters'], ['custom_second'])
+        for identity in ('custom_second', 'derpy_hooves', 'spike'):
+            self.assertEqual(bank['routes'][identity], before['routes'][identity])
+        self.assertEqual(bank['legacy_speakers'], before['legacy_speakers'])
+        updated = load_bank(preserve_custom_voices(self.root, self.editor.bank_root, self.original))
+        self.assertNotIn('custom_first', updated['routes'])
+        self.assertIn('custom_second', updated['routes'])
+        self.assertEqual(updated['custom_voices']['derpy_hooves'], before['custom_voices']['derpy_hooves'])
+        self.editor.close(); self.editor = VoiceEditor(self.root / 'config.json')
+        self.assertNotIn('custom_first', self.editor.bank['routes'])
+        self.editor.undo()
+        self.assertEqual(self.editor.bank_root, previous)
+        self.assertEqual(self.editor.bank, before)
+
+    def test_remove_rejects_stock_replacements_and_invalid_ids_without_writing(self):
+        replacement = self.prepared(); self.editor.apply(replacement['id'])
+        before = (self.root / 'config.json').read_bytes()
+        packs = set((self.root / 'assets/voice-packs').iterdir())
+        for identity in ('derpy_hooves', 'spike', 'missing', '../escape', '', None, [], 42):
+            with self.subTest(identity=identity), self.assertRaisesRegex(ValueError, 'Only added custom voices'):
+                self.editor.remove_voice(identity)
+        self.assertEqual((self.root / 'config.json').read_bytes(), before)
+        self.assertEqual(set((self.root / 'assets/voice-packs').iterdir()), packs)
+
+    def test_remove_activation_failure_keeps_current_voice_and_configuration(self):
+        prepared = self.editor.prepare('custom_first', 'My words.', WAV, name='First voice')
+        self.editor.audition('custom_first', 'Hello.', prepared['id']); self.editor.apply(prepared['id'])
+        before = (self.root / 'config.json').read_bytes()
+        previous = self.editor.bank_root
+        def write(path, value):
+            if path == self.root / 'config.json': raise OSError('read only config')
+            return write_json(path, value)
+        with patch('breeze_pny.voice_edit.write_json', side_effect=write):
+            with self.assertRaisesRegex(OSError, 'read only'): self.editor.remove_voice('custom_first')
+        self.assertEqual((self.root / 'config.json').read_bytes(), before)
+        self.assertEqual(self.editor.bank_root, previous)
+        self.assertIn('custom_first', self.editor.bank['routes'])
 
     def test_external_reference_directory_requires_exact_hash(self):
         self.editor.reference_directory = self.root

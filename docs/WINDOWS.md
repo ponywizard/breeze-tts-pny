@@ -8,13 +8,15 @@ Game mod **0.1.3** is shipping for **Windows user playtesting**, in flatscreen a
 
 After setup, run **`breeze-companion.cmd`** for Generate, Voices and Models. The browser and the game API share the loaded model. You can use the companion without the game. `start-companion.cmd` remains the API-only launcher; close one before starting the other. [Complete UI guide](COMPANION.md).
 
+In 0.3.3, select an added custom voice in **Voices** and choose **Remove voice** to remove it independently of later additions or edits. **Undo last change** restores it. Existing recordings and voice-pack snapshots are retained.
+
 Companion 0.3.2 adds LAN browser hosting with `.\breeze-companion.cmd --web-host 0.0.0.0 --no-browser` from PowerShell in this folder. Open the full session link using this PC's LAN IPv4 address on the other computer, and allow TCP port 18793 on your private network. Add `--host 0.0.0.0` to also expose the game API on port 18792. See [LAN hosting](COMPANION.md#lan-hosting) for details. **Voices → Add voice** also adds new named voices from your own reference recordings; see [custom voices](COMPANION.md#add-a-custom-voice).
 
 ## Install the companion
 
-Existing 0.3.0/0.3.1 users should follow [Upgrade from 0.3.0 or 0.3.1](COMPANION.md#upgrade-from-030) to update the companion while keeping installed models and personal references.
+Existing 0.3.0–0.3.2 users should follow [Upgrade from 0.3.0–0.3.2](COMPANION.md#upgrade-from-030) to update the companion while keeping installed models and personal references.
 
-1. Download `breeze-tts-pny-0.3.2-windows-x86_64.zip` and `breeze-pny-curated-voices-20261115.tar.gz` from the same 0.3.2 release package. The ZIP includes game mod `breeze_tts_pny-0.1.3-windows-x86_64.pck`; it is also available from the [mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3). `WINDOWS-SHA256SUMS` records the expected download hashes.
+1. Download `breeze-tts-pny-0.3.3-windows-x86_64.zip` and `breeze-pny-curated-voices-20261115.tar.gz` from the same 0.3.3 release package. The ZIP includes game mod `breeze_tts_pny-0.1.3-windows-x86_64.pck`; it is also available from the [mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3). `WINDOWS-SHA256SUMS` records the expected download hashes.
 2. Extract the ZIP to a user-owned folder, such as `C:\BreezePNY`. Place the voice-pack `.tar.gz` **inside that extracted folder**, alongside `setup.cmd`. Leave the voice pack compressed. Keep the folder in its intended location before setup.
 3. Run `setup.cmd`. The companion installs in the folder's `companion` subdirectory. Setup copies the voices and adapters, downloads the pinned Q8 model (about 3.6 GB), and verifies the files. Allow at least 6 GB of free space and keep the setup window open until it finishes. Progress and checksum verification are shown in the terminal.
 4. Run `breeze-companion.cmd` for the UI, or `start-companion.cmd` for API-only operation. Wait for the model to be ready. Leave this window open while playing; Ctrl+C stops the companion and its owned native process.

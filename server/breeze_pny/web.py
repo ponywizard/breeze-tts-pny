@@ -123,6 +123,7 @@ def create_server(companion, port=18793, host='127.0.0.1'):
                     return self.send(200, companion.audition(body.get('character'), body.get('text'), body.get('pending_id'), watch), 'audio/wav')
                 elif self.path == '/api/apply': result = companion.apply(body.get('pending_id'))
                 elif self.path == '/api/undo': result = companion.undo()
+                elif self.path == '/api/remove-voice': result = companion.remove_voice(body.get('character'))
                 else: return self.json_reply(404, {'error': 'Not found'})
                 self.json_reply(200, result)
             except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):

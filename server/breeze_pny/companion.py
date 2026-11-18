@@ -142,6 +142,12 @@ class Companion(VoiceEditor):
             self.router.bank = self.bank
             return result
 
+    def remove_voice(self, character):
+        with self._metadata:
+            result = super().remove_voice(character)
+            self.router.bank = self.bank
+            return result
+
     def submit(self, action, identity=None):
         if action not in ('download', 'load', 'unload', 'delete'):
             raise ValueError('Unknown model operation')

@@ -38,7 +38,7 @@ function firstLine(stream) {
     const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
     socket = new WebSocket(targets.find(item => item.type === 'page').webSocketDebuggerUrl);
     await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
-    let next = 1;
+    let next = 1, dialogOpened;
     const requests = new Map(), errors = [];
     socket.onmessage = event => {
       const message = JSON.parse(event.data);
@@ -48,6 +48,7 @@ function firstLine(stream) {
       }
       if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.text);
       if (message.method === 'Log.entryAdded' && message.params.entry.level === 'error') errors.push(message.params.entry.text);
+      if (message.method === 'Page.javascriptDialogOpening') dialogOpened?.(message.params);
     };
     const command = (method, params = {}) => new Promise((resolve, reject) => {
       const id = next++; requests.set(id, {resolve, reject}); socket.send(JSON.stringify({id, method, params}));
@@ -61,12 +62,13 @@ function firstLine(stream) {
       for (let i = 0; i < 100; i++) { if (await evaluate(expression)) return; await delay(100); }
       throw Error('Browser timed out: ' + expression + ' | ' + await evaluate('document.body.innerText'));
     };
-    await command('Runtime.enable'); await command('Log.enable');
+    await command('Runtime.enable'); await command('Log.enable'); await command('Page.enable');
     await command('Emulation.setDeviceMetricsOverride', {width: 1200, height: 1300, deviceScaleFactor: 1, mobile: false});
     await command('Page.navigate', {url: info.url});
     await waitFor("document.getElementById('name')?.textContent === 'Derpy Hooves'");
     assert.ok(await evaluate(`document.getElementById('api-address').textContent.includes(${JSON.stringify(new URL(info.url).hostname)})`), 'API address does not follow the browser host');
     await evaluate("document.querySelector('[data-tab=voices]').click()");
+    assert.equal(await evaluate("document.getElementById('remove-voice').hidden"), true, 'Stock voice exposes removal');
     assert.equal(await evaluate("document.querySelectorAll('#characters button').length"), 2);
     assert.ok(await evaluate("document.getElementById('source').textContent.includes('Season 2, episode 14')"));
     assert.equal(await evaluate("document.querySelector('#source a').href"), 'https://example.org/recording#clip');
@@ -216,6 +218,49 @@ function firstLine(stream) {
     await waitFor("document.querySelectorAll('#voice option').length === 3");
     await evaluate("document.querySelector('[data-tab=voices]').click(); [...document.querySelectorAll('#characters button')].find(button => button.textContent.startsWith('My narrator')).click()");
     assert.equal(await evaluate("document.getElementById('voice-id').textContent"), 'Voice ID: custom_my_narrator');
+    assert.equal(await evaluate("document.getElementById('remove-voice').hidden"), false);
+    // Add a second voice, then remove the older one without discarding the newer addition.
+    await evaluate("document.getElementById('add-voice').click(); document.getElementById('new-name').value = 'Second narrator'; document.getElementById('new-name').dispatchEvent(new Event('input'))");
+    assert.equal(await evaluate("document.getElementById('remove-voice').hidden"), true, 'An unsaved voice exposes removal');
+    const newDocument = await command('DOM.getDocument');
+    const newInput = await command('DOM.querySelector', {nodeId: newDocument.root.nodeId, selector: '#file'});
+    await command('DOM.setFileInputFiles', {nodeId: newInput.nodeId, files: [info.recording]});
+    await waitFor("!document.getElementById('replacement-audio').hidden && !busy");
+    await evaluate("document.getElementById('new-transcript').value = 'More words.'; document.getElementById('new-transcript').dispatchEvent(new Event('input')); document.getElementById('try').click()");
+    await waitFor("!document.getElementById('apply').disabled && !busy");
+    await evaluate("document.getElementById('apply').click()");
+    await waitFor("!busy && document.querySelectorAll('#voice option').length === 4");
+    await evaluate("[...document.querySelectorAll('#characters button')].find(button => button.textContent.startsWith('My narrator')).click()");
+    const removeVoice = async accept => {
+      let timeout;
+      const opened = new Promise((resolve, reject) => {
+        dialogOpened = resolve;
+        timeout = setTimeout(() => reject(Error('Removal confirmation did not open')), 10000);
+      });
+      const click = evaluate("document.getElementById('remove-voice').click()");
+      try {
+        const dialog = await opened;
+        assert.equal(dialog.type, 'confirm');
+        assert.ok(dialog.message.includes('My narrator é <b>test</b>'));
+        await command('Page.handleJavaScriptDialog', {accept});
+        await click;
+      } finally { clearTimeout(timeout); dialogOpened = null; }
+    };
+    await removeVoice(false);
+    assert.equal(await evaluate("state.characters.length"), 4, 'Cancelled removal changed the voice pack');
+    await removeVoice(true);
+    await waitFor("!busy && document.querySelectorAll('#voice option').length === 3");
+    assert.equal(await evaluate("state.characters.some(row => row.id === 'custom_my_narrator')"), false);
+    assert.equal(await evaluate("state.characters.some(row => row.id === 'custom_second_narrator')"), true);
+    await command('Page.reload');
+    await waitFor("document.querySelectorAll('#voice option').length === 3");
+    assert.equal(await evaluate("state.characters.some(row => row.id === 'custom_my_narrator')"), false, 'Removed voice returned after reload');
+    await evaluate("document.querySelector('[data-tab=voices]').click(); document.getElementById('undo').click()");
+    await waitFor("!busy && document.querySelectorAll('#voice option').length === 4");
+    assert.equal(await evaluate("state.characters.some(row => row.id === 'custom_my_narrator')"), true);
+    assert.equal(await evaluate("state.characters.some(row => row.id === 'custom_second_narrator')"), true);
+    await evaluate("document.getElementById('undo').click()");
+    await waitFor("!busy && document.querySelectorAll('#voice option').length === 3");
     await evaluate("document.getElementById('undo').click()");
     await waitFor("!busy && document.querySelectorAll('#voice option').length === 2");
     assert.equal(await evaluate("state.characters.some(row => row.id === 'custom_my_narrator')"), false);
@@ -267,7 +312,7 @@ function firstLine(stream) {
       }
     }
     assert.deepEqual(errors.filter(error => !error.includes('ERR_ABORTED')), [], 'Browser console errors');
-    console.log('PASS: named custom voice creation/generation/reload/undo, reference workflow and provenance, host-aware API address, same-text voice switching, randomized/fixed seeds and persistence, delivery direction, Generate/autoplay/download, cancellation/recovery, shared model unload/load, mobile layout, reload');
+    console.log('PASS: named custom voice creation/generation/reload/undo, selective removal with confirmation/cancel/reload/undo, reference workflow and provenance, host-aware API address, same-text voice switching, randomized/fixed seeds and persistence, delivery direction, Generate/autoplay/download, cancellation/recovery, shared model unload/load, mobile layout, reload');
   } finally {
     if (socket) socket.close();
     if (browser) { browser.kill(); await new Promise(resolve => browser.once('exit', resolve)); }

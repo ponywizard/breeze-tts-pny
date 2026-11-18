@@ -205,6 +205,32 @@ class CompanionChecks(unittest.TestCase):
         self.assertEqual(self.app.job['status'], 'cancelled')
         self.assertFalse(model_path(self.fixture.root, CATALOG['f16']).exists())
 
+    def test_remove_voice_http_auth_busy_protection_live_routing_and_undo(self):
+        for identity, name in [('custom_first', 'First voice'), ('custom_second', 'Second voice')]:
+            prepared = self.app.prepare(identity, 'My words.', WAV, name=name)
+            self.app.audition(identity, 'Hello.', prepared['id']); self.app.apply(prepared['id'])
+        body = {'character': 'custom_first'}
+        self.assertEqual(self.call('POST', '/api/remove-voice', body, token='wrong')[0], 403)
+        self.assertEqual(self.call('POST', '/api/remove-voice', body, origin='https://elsewhere.invalid')[0], 403)
+        with self.app.router.lock:
+            self.assertEqual(self.call('POST', '/api/remove-voice', body)[0], 409)
+        self.assertIn('custom_first', self.app.router.bank['routes'])
+        self.assertEqual(self.call('POST', '/api/remove-voice', {'character': 'spike'})[0], 400)
+        code, raw = self.call('POST', '/api/remove-voice', body)
+        self.assertEqual(code, 200, raw)
+        self.assertNotIn('custom_first', [row['id'] for row in json.loads(raw)['characters']])
+        self.assertIs(self.app.router.bank, self.app.bank)
+        self.assertNotIn('custom_first', self.app.router.bank['routes'])
+        self.assertEqual(self.call('POST', '/tts', {'character_id': 'custom_first', 'text': 'Hello.'})[0], 400)
+        self.assertEqual(self.call('POST', '/tts', {'character_id': 'custom_second', 'text': 'Hello.'})[0], 200)
+        self.assertTrue(self.app.router.lock.acquire(timeout=2)); self.app.router.lock.release()
+        self.assertEqual(self.call('POST', '/api/undo', {})[0], 200)
+        self.assertEqual(self.call('POST', '/tts', {'character_id': 'custom_first', 'text': 'Hello.'})[0], 200)
+        self.assertTrue(self.app.router.lock.acquire(timeout=2)); self.app.router.lock.release()
+        self.job('unload')
+        self.assertEqual(self.call('POST', '/api/remove-voice', body)[0], 200)
+        self.assertEqual(self.app.phase, 'unloaded')
+
 
 class CatalogChecks(unittest.TestCase):
     def test_only_pinned_family_is_compatible(self):

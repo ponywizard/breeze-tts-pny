@@ -53,11 +53,21 @@ def pcm_wav(pcm):
     return result.getvalue()
 
 
-def custom_pack(prefix, base_root, replacements, additions=()):
+def custom_pack(prefix, base_root, replacements, additions=(), *, removals=()):
     """Copy verified assets and publish a complete pack before changing config."""
     base = load_bank(base_root)
     bank = copy.deepcopy(base)
     bank.pop('routes', None)
+    for character in removals:
+        if character not in bank.get('custom_characters', []):
+            raise ValueError('Only added custom voices can be removed')
+        bank['characters'] = [row for row in bank['characters'] if row['id'] != character]
+        bank['custom_characters'].remove(character)
+        bank['custom_voices'].pop(character)
+        bank['legacy_speakers'] = {speaker: identity for speaker, identity in bank.get('legacy_speakers', {}).items()
+                                   if identity != character}
+    if not bank['characters']:
+        raise ValueError('Keep at least one voice in the voice pack')
     for row in additions:
         if any(existing['id'].casefold() == row['id'].casefold() for existing in bank['characters']):
             raise ValueError('The voice pack already has a character named ' + row['id'])
@@ -93,7 +103,8 @@ def custom_pack(prefix, base_root, replacements, additions=()):
         bank['version'] = 'personal-' + destination.name[7:19]
         write_json(staging / 'voice-edit.json', {
             'schema': 1, 'previous_voice_pack': base_root.relative_to(prefix).as_posix(),
-            'characters': [r[0] for r in replacements], 'created_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+            'characters': [r[0] for r in replacements] + list(removals),
+            'created_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
         })
         bank['files']['voice-edit.json'] = sha(staging / 'voice-edit.json')
         write_json(staging / 'voice-pack.json', bank)
@@ -353,6 +364,16 @@ class VoiceEditor:
         additions = [pending['new_character']] if pending['new_character'] else []
         destination = custom_pack(self.prefix, self.bank_root, [
             (pending['character'], info, {name: cache.read_bytes(), reference: pending['raw']})], additions)
+        return self._activate(destination)
+
+    def remove_voice(self, character):
+        self.unchanged()
+        if not isinstance(character, str) or character not in self.bank.get('custom_characters', []):
+            raise ValueError('Only added custom voices can be removed')
+        destination = custom_pack(self.prefix, self.bank_root, [], removals=(character,))
+        return self._activate(destination)
+
+    def _activate(self, destination):
         config = {**self.config, 'voice_pack': destination.relative_to(self.prefix).as_posix()}
         write_json(self.config_path, config)
         self.config, self.bank_root = config, destination
