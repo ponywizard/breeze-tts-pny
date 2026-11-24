@@ -13,6 +13,8 @@ For Windows, use [the Windows package](WINDOWS.md), which includes Python and th
 
 ## Install
 
+To install the 140-voice pack with Queen Chrysalis, follow the [November 23 voice-pack instructions for Linux](https://github.com/ponywizard/breeze-tts-pny/releases/tag/voices-20261123). The commands below use the original 0.3.3 release bundle.
+
 Existing 0.3.0–0.3.2 users should follow [Upgrade from 0.3.0–0.3.2](COMPANION.md#upgrade-from-030) to update the companion while keeping installed models and personal references.
 
 Download these matching release files:

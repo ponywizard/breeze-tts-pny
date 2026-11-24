@@ -14,6 +14,8 @@ Companion 0.3.2 adds LAN browser hosting with `.\breeze-companion.cmd --web-host
 
 ## Install the companion
 
+To install the 140-voice pack with Queen Chrysalis, follow the [November 23 voice-pack instructions for PowerShell](https://github.com/ponywizard/breeze-tts-pny/releases/tag/voices-20261123). The steps below use the original 0.3.3 release bundle.
+
 Existing 0.3.0–0.3.2 users should follow [Upgrade from 0.3.0–0.3.2](COMPANION.md#upgrade-from-030) to update the companion while keeping installed models and personal references.
 
 1. Download `breeze-tts-pny-0.3.3-windows-x86_64.zip` and `breeze-pny-curated-voices-20261115.tar.gz` from the same 0.3.3 release package. The ZIP includes game mod `breeze_tts_pny-0.1.3-windows-x86_64.pck`; it is also available from the [mod release](https://github.com/ponywizard/breeze-tts-pny/releases/tag/mod-v0.1.3). `WINDOWS-SHA256SUMS` records the expected download hashes.

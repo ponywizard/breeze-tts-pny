@@ -4,6 +4,8 @@ Breeze Companion is a local browser interface for speech generation, personal vo
 
 ## Start
 
+For Queen Chrysalis and the full 140-voice roster, use the separate [November 23 voice-pack download and setup commands](https://github.com/ponywizard/breeze-tts-pny/releases/tag/voices-20261123) with Companion 0.3.3. The original 0.3.3 bundle instructions follow.
+
 Install the companion and `breeze-pny-curated-voices-20261115.tar.gz` using the [Linux setup](SERVER.md#install) or [Windows setup](WINDOWS.md#install-the-companion). Windows includes Python; Linux needs Python 3.11+. The native runtime and existing GPU/system requirements still apply.
 
 - Windows: run `setup.cmd`, then `breeze-companion.cmd`.

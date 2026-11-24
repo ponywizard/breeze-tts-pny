@@ -29,6 +29,18 @@ For a guided local replacement, use the [voice library](VOICE_LIBRARY.md). Packs
 
 Companion 0.3.2 adds [named custom voices in Companion](COMPANION.md#add-a-custom-voice). Personal packs also record added character IDs in `custom_characters`, a unique list whose entries must have matching `custom_voices` mappings. These routes, names, caches and reference recordings are carried into updated curated packs. An ID collision with a new curated route stops the update. Added voices use the base model with no adapter; replacing a curated reference keeps its existing route settings.
 
+## Queen Chrysalis
+
+The `curated-ponies-20261123` pack adds Queen Chrysalis to the 139 voices in the November 15 pack. [Queen Chrysalis mod 0.2.12](https://mods.pones.top/mod/69) gives her profile ID `chrysalis` and legacy speaker number `7`. Its disguise profiles also use `chrysalis`, so they select the same Breeze voice.
+
+The selected reference is take C, “The castle search”, from the /ppp/ special-source recording of S08E13 at 04:39. It uses 5.14 seconds of neutral dialogue and the Q8 audition's base-model settings. The transcript is “I assumed they were in Canterlot. My castle search proved otherwise.” [Source FLAC](https://mega.nz/folder/jkwimSTa#_xk0VnR30C8Ljsy4RCGSig/file/HkxxGKID) · [Archive transcript](https://mega.nz/folder/jkwimSTa#_xk0VnR30C8Ljsy4RCGSig/file/qtpDnSbY)
+
+Companion 0.3.3 accepts the new archive on Linux and Windows. Pass `--voice-pack` with the new archive to the usual installer, plus `--update` for an existing installation. To reproduce the archive, use FFmpeg, the published November 15 pack, the source FLAC above and a stopped Q8 Companion installation. The build uses a temporary native voice cache.
+
+```bash
+python3 scripts/build_chrysalis_pack.py --base-pack "$base_pack" --flac "$source_flac" --config "$companion_config"
+```
+
 ## Native patch and licensing
 
 The selected runtime is [Breeze-TTS-2.cpp v0.1.6](https://github.com/HoppouAI/Breeze-TTS-2.cpp/tree/v0.1.6), revision `87b43667ca5597f826441991e416a279ed7373b9`, with the included per-request LoRA patch. The model stays resident and adapters are selected per utterance; the build uses one generation slot. The published stock binary alone does not provide this patch's adapter acknowledgement contract.
